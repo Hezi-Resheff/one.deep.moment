@@ -1,6 +1,9 @@
 
 import numpy as np
 import pandas as pd
+import os
+
+import settings
 from utils import compute_first_n_moments
 
 
@@ -41,6 +44,25 @@ def sample_flatten_log_moment(degree, max_rate, n, moment_index=2, clip=2.5, bin
     sampled_dist = [clipped_dists[i] for i in use_dist_ix]
 
     return sampled_dist
+
+
+def sample_save_training_data(sample_param_dict, output_path):
+    distributions = sample_flatten_log_moment(**sample_param_dict)
+    params = [np.hstack((np.diag(A), np.diag(A, 1))) for a, A in distributions]
+
+    param_names = [f"diag_0_{i}" for i in range(sample_param_dict["degree"])] + \
+                  [f"diag_1_{i}" for i in range(sample_param_dict["degree"]-1)]
+    pd.DataFrame(params, columns=param_names).to_csv(output_path)
+
+
+if __name__ == "__main__":
+
+    params = {"n": 100000, "degree": 5, "max_rate": 1, "moment_index": 1, "clip": 5, "bins": 200}
+    out_path = os.path.join(settings.SAVE_PATH, "data0.csv")
+    sample_save_training_data(params, out_path)
+
+
+
 
 
 
