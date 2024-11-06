@@ -83,8 +83,8 @@ def compute_first_n_moments(s, A, n=3):
     '''
     moment_list = []
     for moment in range(1, n + 1):
-        moment_list.append(ser_moment_n(s, A, moment))
-    return moment_list
+        moment_list.append(ser_moment_n(s, A, moment).item())
+    return np.array(moment_list)
 
 
 def create_erlang_row(rate, ind, size):
