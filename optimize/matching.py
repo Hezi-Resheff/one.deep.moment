@@ -60,6 +60,8 @@ def fit_ft_distribution(ms, k, num_epochs=1000):
                 moments = torch.stack(list(moments)).detach().numpy().round(2)
                 print(f" => moments are: {moments}")
 
+    return (lambdas, ps, alpha), make_pt(lambdas, ps, alpha, k)
+
 
 if __name__ == "__main__":
     from utils import compute_first_n_moments
@@ -100,4 +102,7 @@ if __name__ == "__main__":
     compare_moment_methods()
 
     ms = torch.tensor([4.438, 38.640, 502.534, 8705.890, 188486.062], dtype=torch.float32)
-    fit_ft_distribution(ms, 3, num_epochs=200000)
+    (lambdas, ps, alpha), (a, T) = fit_ft_distribution(ms, 3, num_epochs=200000)
+    print(a)
+    print(T)
+    print(list(compute_moments(a, T, 3, 2*3+1)))
