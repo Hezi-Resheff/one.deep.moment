@@ -1,8 +1,8 @@
 import torch
 
 
-def make_ft(lambdas, ps, alpha, k):
-    """ Use the arbitrary parameters, and make a valid FT representation  (a, T):
+def make_pt(lambdas, ps, alpha, k):
+    """ Use the arbitrary parameters, and make a valid PT representation  (a, T):
         lambdas: positive size k
         ps: size k x k
         alpha: size k
@@ -30,7 +30,7 @@ def compute_moments(a, T, k, n):
 
 
 def compute_loss(ps, lambdas, alpha, k, ms):
-    a, T = make_ft(lambdas, ps, alpha, k)
+    a, T = make_pt(lambdas, ps, alpha, k)
     moments = compute_moments(a, T, k, len(ms))
     moments = torch.stack(list(moments))
     return torch.mean((moments - ms) ** 2)
@@ -55,7 +55,7 @@ def fit_ft_distribution(ms, k, num_epochs=1000):
         if epoch % 1000 == 0:
             print(f"Epoch {epoch}: loss = {loss}")
             if epoch % 10000 == 0:
-                a, T = make_ft(lambdas, ps, alpha, k)
+                a, T = make_pt(lambdas, ps, alpha, k)
                 moments = compute_moments(a, T, k, len(ms))
                 moments = torch.stack(list(moments)).detach().numpy().round(2)
                 print(f" => moments are: {moments}")
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         ps = torch.randn(k, k)
         lambdas = torch.rand(k)
         alpha = torch.randn(k)
-        a, T = make_ft(lambdas, ps, alpha, k)
+        a, T = make_pt(lambdas, ps, alpha, k)
         print("="*20)
         print("Sum of a: ", a.sum())
         print("="*20)
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         ps = torch.randn(k, k)
         lambdas = torch.rand(k)
         alpha = torch.randn(k)
-        a, T = make_ft(lambdas, ps, alpha, k)
+        a, T = make_pt(lambdas, ps, alpha, k)
 
         # External moment computation
         m_there = compute_first_n_moments(a, T, n=2*k-1)
