@@ -1,7 +1,7 @@
 import torch
 
 
-def make_pt(lambdas, ps, alpha, k):
+def make_ph(lambdas, ps, alpha, k):
     """ Use the arbitrary parameters, and make a valid PT representation  (a, T):
         lambdas: positive size k
         ps: size k x k
@@ -30,13 +30,13 @@ def compute_moments(a, T, k, n):
 
 
 def compute_loss(ps, lambdas, alpha, k, ms):
-    a, T = make_pt(lambdas, ps, alpha, k)
+    a, T = make_ph(lambdas, ps, alpha, k)
     moments = compute_moments(a, T, k, len(ms))
     moments = torch.stack(list(moments))
     return torch.mean((moments - ms) ** 2)
 
 
-def fit_ft_distribution(ms, k, num_epochs=1000):
+def fit_ph_distribution(ms, k, num_epochs=1000):
 
     # init
     ps = torch.randn(k, k, requires_grad=True)
@@ -55,24 +55,24 @@ def fit_ft_distribution(ms, k, num_epochs=1000):
         if epoch % 1000 == 0:
             print(f"Epoch {epoch}: loss = {loss}")
             if epoch % 10000 == 0:
-                a, T = make_pt(lambdas, ps, alpha, k)
+                a, T = make_ph(lambdas, ps, alpha, k)
                 moments = compute_moments(a, T, k, len(ms))
                 moments = torch.stack(list(moments)).detach().numpy().round(2)
                 print(f" => moments are: {moments}")
 
-    return (lambdas, ps, alpha), make_pt(lambdas, ps, alpha, k)
+    return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
 
 
 if __name__ == "__main__":
     from utils import compute_first_n_moments
 
-    def make_a_ft():
+    def make_a_ph():
         """ sanity check for the make_ft function """
         k = 3
         ps = torch.randn(k, k)
         lambdas = torch.rand(k)
         alpha = torch.randn(k)
-        a, T = make_pt(lambdas, ps, alpha, k)
+        a, T = make_ph(lambdas, ps, alpha, k)
         print("="*20)
         print("Sum of a: ", a.sum())
         print("="*20)
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         ps = torch.randn(k, k)
         lambdas = torch.rand(k)
         alpha = torch.randn(k)
-        a, T = make_pt(lambdas, ps, alpha, k)
+        a, T = make_ph(lambdas, ps, alpha, k)
 
         # External moment computation
         m_there = compute_first_n_moments(a, T, n=2*k-1)
@@ -98,11 +98,11 @@ if __name__ == "__main__":
         for i, (m1, m2) in enumerate(zip(m_here, m_there)):
             print(f"Moment {i+1} is {m1:.3f} and {m2:.3f}")
 
-    make_a_ft()
+    make_a_ph()
     compare_moment_methods()
 
-    ms = torch.tensor([4.438, 38.640, 502.534, 8705.890, 188486.062], dtype=torch.float32)
-    (lambdas, ps, alpha), (a, T) = fit_ft_distribution(ms, 3, num_epochs=200000)
+    ms = torch.tensor([11.798, 276.993, 9740.408, 456597.906, 26754056.000], dtype=torch.float32)
+    (lambdas, ps, alpha), (a, T) = fit_ph_distribution(ms, 3, num_epochs=200000)
     print(a)
     print(T)
     print(list(compute_moments(a, T, 3, 2*3+1)))
