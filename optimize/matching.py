@@ -1,5 +1,8 @@
 import torch
 
+# Stop optimization when the loss hits this value
+MIN_LOSS_EPSILON = 1e-8
+
 
 def make_ph(lambdas, ps, alpha, k):
     """ Use the arbitrary parameters, and make a valid PT representation  (a, T):
@@ -30,14 +33,22 @@ def compute_moments(a, T, k, n):
         yield signed_factorial * a @ T_powers @ one
 
 
-def compute_loss(ps, lambdas, alpha, k, ms):
+def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
+    if moment_weights is None:
+        moment_weights = torch.ones_like(ms)
+
     a, T = make_ph(lambdas, ps, alpha, k)
     moments = compute_moments(a, T, k, len(ms))
     moments = torch.stack(list(moments))
-    return torch.mean((moments - ms) ** 2)
+
+    error = (moments - ms)
+    weighted_error = error * moment_weights
+    ms_weighted_erorr = torch.mean(weighted_error ** 2)
+
+    return ms_weighted_erorr
 
 
-def fit_ph_distribution(ms, k, num_epochs=1000):
+def fit_ph_distribution(ms, k, num_epochs=1000, moment_weights=None):
 
     # init
     ps = torch.randn(k, k, requires_grad=True)
@@ -49,7 +60,11 @@ def fit_ph_distribution(ms, k, num_epochs=1000):
 
     for epoch in range(num_epochs):
         optimizer.zero_grad()
-        loss = compute_loss(ps, lambdas, alpha, k, ms)
+        loss = compute_loss(ps, lambdas, alpha, k, ms, moment_weights)
+
+        if loss < MIN_LOSS_EPSILON:
+            break
+
         loss.backward()
         optimizer.step()
 
@@ -103,7 +118,9 @@ if __name__ == "__main__":
     compare_moment_methods()
 
     ms = torch.tensor([5.945, 90.263, 2149.274, 68713.670, 2749026.533], dtype=torch.float32)
-    (lambdas, ps, alpha), (a, T) = fit_ph_distribution(ms, 3, num_epochs=200000)
+    ws = ms ** (-1)
+    # ws = torch.ones_like(ms)
+    (lambdas, ps, alpha), (a, T) = fit_ph_distribution(ms, 3, num_epochs=200000, moment_weights=ws)
     print(a)
     print(T)
     print(list(compute_moments(a, T, 3, 2*3-1)))
