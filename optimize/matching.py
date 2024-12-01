@@ -7,9 +7,10 @@ def make_ph(lambdas, ps, alpha, k):
         ps: size k x k
         alpha: size k
     """
+    ls = lambdas ** 2
     a = torch.nn.functional.softmax(alpha, 0)
     p = torch.nn.functional.softmax(ps, 1)
-    lambdas_on_rows = lambdas.repeat(k, 1).T
+    lambdas_on_rows = ls.repeat(k, 1).T
     T = (p + torch.diag(-1 - torch.diag(p))) * lambdas_on_rows
     return a, T
 
@@ -101,8 +102,9 @@ if __name__ == "__main__":
     make_a_ph()
     compare_moment_methods()
 
-    ms = torch.tensor([11.798, 276.993, 9740.408, 456597.906, 26754056.000], dtype=torch.float32)
+    ms = torch.tensor([5.945, 90.263, 2149.274, 68713.670, 2749026.533], dtype=torch.float32)
     (lambdas, ps, alpha), (a, T) = fit_ph_distribution(ms, 3, num_epochs=200000)
     print(a)
     print(T)
-    print(list(compute_moments(a, T, 3, 2*3+1)))
+    print(list(compute_moments(a, T, 3, 2*3-1)))
+
