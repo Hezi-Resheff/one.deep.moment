@@ -52,7 +52,7 @@ def fit_ph_distribution(ms, k, num_epochs=1000, moment_weights=None):
 
     # init
     ps = torch.randn(k, k, requires_grad=True)
-    lambdas = torch.rand(k, requires_grad=True)  # these must stay positive
+    lambdas = torch.tensor(torch.rand(k)*100, requires_grad=True)   # these must stay positive
     alpha = torch.randn(k, requires_grad=True)
 
     # GD
