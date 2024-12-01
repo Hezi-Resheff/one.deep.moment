@@ -10,7 +10,7 @@ def get_feasible_moments(original_size, n):
     """ Compute feasible k-moments by sampling from high order PH and scaling """
     k = original_size
     ps = torch.randn(k, k)
-    lambdas = torch.rand(k)
+    lambdas = torch.rand(k) * 100
     alpha = torch.randn(k)
     a, T = make_ph(lambdas, ps, alpha, k)
 
@@ -26,9 +26,9 @@ def get_feasible_moments(original_size, n):
 
 
 if __name__ == "__main__":
-    orig_size = 100
-    use_size = 50
-    n = 20
+    orig_size = 50   # This is the size of the PH the moments come from (so we know they are feasible)
+    use_size = 50    # This is the size of the target PH
+    n = 21           # This is the number of moments to match
 
     ms = get_feasible_moments(original_size=orig_size, n=n)
     print(ms)

@@ -24,7 +24,7 @@ def compute_moments(a, T, k, n):
     """
     T_in = torch.inverse(T)
     T_powers = torch.eye(k)
-    signed_factorial = 1
+    signed_factorial = 1.
     one = torch.ones(k)
 
     for i in range(1, n+1):
