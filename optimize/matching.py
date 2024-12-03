@@ -1,6 +1,6 @@
 import torch
 from util import *
-
+import numpy as np
 
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-8
@@ -28,7 +28,7 @@ class MomentMatcher(object):
     def fit_ph_distribution(self, k, num_epochs=1000, moment_weights=None,
                             lambda_scale=100, lr=1e-4, init=None):
 
-        lambda_scale = 1000
+        # lambda_scale = 1000
         # init
         if init is None:
             ps = torch.randn(k, k, requires_grad=True)
@@ -60,6 +60,9 @@ class MomentMatcher(object):
                     moments = compute_moments(a, T, k, len(self.ms))
                     moments = torch.stack(list(moments)).detach().numpy().round(2)
                     print(f" => moments are: {moments}")
+                    if np.isnan(moments).sum() > 0:
+                        return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
+
 
         return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
 
