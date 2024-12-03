@@ -28,6 +28,7 @@ class MomentMatcher(object):
     def fit_ph_distribution(self, k, num_epochs=1000, moment_weights=None,
                             lambda_scale=100, lr=1e-4, init=None):
 
+        lambda_scale = 1000
         # init
         if init is None:
             ps = torch.randn(k, k, requires_grad=True)
