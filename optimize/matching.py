@@ -1,38 +1,9 @@
 import torch
 from util import *
-import numpy as np
+
 
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-8
-
-
-def make_ph(lambdas, ps, alpha, k):
-    """ Use the arbitrary parameters, and make a valid PT representation  (a, T):
-        lambdas: positive size k
-        ps: size k x k
-        alpha: size k
-    """
-    ls = lambdas ** 2
-    a = torch.nn.functional.softmax(alpha, 0)
-    p = torch.nn.functional.softmax(ps, 1)
-    lambdas_on_rows = ls.repeat(k, 1).T
-    T = (p + torch.diag(-1 - torch.diag(p))) * lambdas_on_rows
-    return a, T
-
-
-def compute_moments(a, T, k, n):
-    """ generate first n moments of FT (a, T)
-    m_i = ((-1) ** i) i! a T^(-i) 1
-    """
-    T_in = torch.inverse(T)
-    T_powers = torch.eye(k)
-    signed_factorial = 1.
-    one = torch.ones(k)
-
-    for i in range(1, n+1):
-        signed_factorial *= -i
-        T_powers = torch.matmul(T_powers, T_in)      # now T_powers is T^(-i)
-        yield signed_factorial * a @ T_powers @ one
 
 
 def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
@@ -88,11 +59,35 @@ class MomentMatcher(object):
                     moments = compute_moments(a, T, k, len(self.ms))
                     moments = torch.stack(list(moments)).detach().numpy().round(2)
                     print(f" => moments are: {moments}")
-                if np.isnan(moments).sum() > 0:
-                    stop_flag = True
-                    return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
 
         return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
+
+    def fit_cascade(self, k_min, k_max, num_epochs=1000, moment_weights=None,
+                            lambda_scale=100, lr=1e-4, init=None):
+
+        out = {}
+
+        ps = torch.randn(k_min, k_min)
+        lambdas = torch.rand(k_min) * lambda_scale
+        alpha = torch.randn(k_min, requires_grad=True)
+
+        for k in range(k_min, k_max+1):
+            print(f"==> Trying with k = {k}...")
+            init = lambdas, ps, alpha
+            this_out = self.fit_ph_distribution(k, num_epochs=num_epochs, moment_weights=moment_weights,
+                                                lambda_scale=lambda_scale, lr=lr, init=init)
+
+            (lambdas, ps, alpha), (a, T) = this_out
+            out[k] = this_out
+            lambdas, ps, alpha = embedd_next_parametrization(lambdas, ps, alpha, k)
+
+        return out
+
+
+# Temporary, so old code that uses this module doesn't break
+def fit_ph_distribution(ms, **params):
+    matcher = MomentMatcher(ms)
+    return matcher.fit_ph_distribution(**params)
 
 
 if __name__ == "__main__":
@@ -133,13 +128,14 @@ if __name__ == "__main__":
     # make_a_ph()
     # compare_moment_methods()
 
-    ms = get_feasible_moments(original_size=100, n=20)
+    ms = get_feasible_moments(original_size=100, n=10)
     ws = ms ** (-1)
 
     matcher = MomentMatcher(ms)
-    out = matcher.fit_cascade(k_min=3, k_max=11, num_epochs=10000, moment_weights=ws, lambda_scale=10, lr=1e-4)
+    out = matcher.fit_cascade(k_min=3, k_max=3, num_epochs=100000, moment_weights=ws, lambda_scale=10, lr=1e-4)
 
-    (lambdas, ps, alpha), (a, T) = out[11]
-    moment_table = moment_analytics(ms, compute_moments(a, T, 11, len(ms)))
+    k = 3
+    (lambdas, ps, alpha), (a, T) = out[k]
+    moment_table = moment_analytics(ms, compute_moments(a, T, k, len(ms)))
     print(moment_table)
 

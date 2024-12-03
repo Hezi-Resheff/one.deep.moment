@@ -60,7 +60,7 @@ def embedd_next_ph(a, T, k):
     a1 = torch.hstack([a, torch.Tensor([0.])])
     T1 = torch.zeros((k+1, k+1))
     T1[:-1, :-1] = T
-    T1[-1, -1] = 1.
+    T1[-1, -1] = -1.
     return a1, T1
 
 
