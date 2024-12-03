@@ -57,7 +57,7 @@ if __name__ == "__main__":
     ws = ms ** (-1)
 
     matcher = MomentMatcher(ms)
-    (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=200000, moment_weights=ws)
+    (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
 
     moment_table = moment_analytics(ms, compute_moments(a, T, use_size, n))
     print(moment_table)

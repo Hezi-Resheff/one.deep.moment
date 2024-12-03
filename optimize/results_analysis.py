@@ -62,13 +62,24 @@ if __name__ == "__main__":
         a, A, moms = sample(orig_size)
         fitted_moms = np.random.randint(5, 21)
         moms = compute_first_n_moments(a, A, fitted_moms)
-        ms = torch.tensor(np.array(moms).flatten())
+        ms1 = torch.tensor(np.array(moms).flatten())
         # ms = get_feasible_moments(original_size=orig_size, n=n)
+        print(ms1)
+        num_epochs = 400000
+        ws1 = ms1 ** (-1)
+        start = time.time()
+
+        # matcher = MomentMatcher(ms)
+        # (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
+
+        ms = get_feasible_moments(original_size=orig_size, n=n)
         print(ms)
         num_epochs = 400000
         ws = ms ** (-1)
-        start = time.time()
-        (lambdas, ps, alpha), (a, T) = fit_ph_distribution(ms, use_size, num_epochs=num_epochs, moment_weights=ws)
+
+        matcher = MomentMatcher(ms1)
+        (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws1)
+
         runtime = time.time() - start
         original_moments = ms.detach().numpy()
         computed_moments = [m.detach().item() for m in compute_moments(a, T, use_size, n)]
@@ -81,7 +92,7 @@ if __name__ == "__main__":
         path_eshel = r'C:\Users\Eshel\workspace\data\mom_matching'
         file_name = 'num_run_' + str(num_run) + '.pkl'  #+ '_num_moms_' + str(n) + '_orig_size_' + str(orig_size) + '_use_size_' + str(
             #use_size) + '_epochs_' + str(num_epochs) + '_runtime_' + str(runtime) + '.pkl'
-        full_path = os.path.join(path, file_name)
+        full_path = os.path.join(path_eshel, file_name)
 
         curr_ind = df.shape[0]
 

@@ -1,6 +1,6 @@
 import torch
 from util import *
-
+import numpy as np
 
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-8
@@ -88,6 +88,9 @@ class MomentMatcher(object):
                     moments = compute_moments(a, T, k, len(self.ms))
                     moments = torch.stack(list(moments)).detach().numpy().round(2)
                     print(f" => moments are: {moments}")
+                if np.isnan(moments).sum() > 0:
+                    stop_flag = True
+                    return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
 
         return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
 
