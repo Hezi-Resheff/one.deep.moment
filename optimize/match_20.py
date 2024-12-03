@@ -41,13 +41,10 @@ def get_feasible_moments(original_size, n):
     ms = compute_moments(a, T, k, n)
     momenets = torch.stack(list(ms))
     return momenets
+from util import get_feasible_moments
 
 
 if __name__ == "__main__":
-
-
-
-
     orig_size = 50   # This is the size of the PH the moments come from (so we know they are feasible)
     use_size = 50    # This is the size of the target PH
               # This is the number of moments to match
@@ -58,14 +55,11 @@ if __name__ == "__main__":
     print(ms)
     num_epochs = 400000
     ws = ms ** (-1)
-    start = time.time()
-    (lambdas, ps, alpha), (a, T) = fit_ph_distribution(ms, use_size, num_epochs=num_epochs, moment_weights=ws)
-    runtime = time.time() - start
-    original_moments = ms.detach().numpy()
-    computed_moments = [m.detach().item() for m in compute_moments(a, T, use_size, n)]
-    moment_table = pd.DataFrame([computed_moments, original_moments], index="computed target".split()).T
-    moment_table["delta"] = moment_table["computed"] - moment_table["target"]
-    moment_table["delta-relative"] = 100*moment_table["delta"] / moment_table["target"]
+
+    matcher = MomentMatcher(ms)
+    (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=200000, moment_weights=ws)
+
+    moment_table = moment_analytics(ms, compute_moments(a, T, use_size, n))
     print(moment_table)
 
 
