@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 sys.path.append(r'C:\Users\Eshel\workspace\butools2\Python')
-
+sys.path.append('/home/eliransc/projects/def-dkrass/eliransc/butools/Python')
 
 import os
 
