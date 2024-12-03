@@ -4,7 +4,25 @@ Can we match 20 moments??
 import torch
 import pandas as pd
 from matching import *
+import numpy as np
+import sys
+import os
+sys.path.append(os.path.abspath(".."))
+from utils_sample_ph import *
 
+
+def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
+    # Compute central moments
+    mu2 = m2 - m1**2
+    mu3 = m3 - 3*m1*m2 + 2*m1**3
+    mu4 = m4 - 4*m1*m3 + 6*m1**2*m2 - 3*m1**4
+
+    # Compute skewness and kurtosis
+    skewness = mu3 / (mu2 ** 1.5)
+    kurtosis = mu4 / (mu2 ** 2)
+    excess_kurtosis = kurtosis - 3
+
+    return skewness, kurtosis
 
 def get_feasible_moments(original_size, n):
     """ Compute feasible k-moments by sampling from high order PH and scaling """
@@ -26,20 +44,28 @@ def get_feasible_moments(original_size, n):
 
 
 if __name__ == "__main__":
+
+
+
+
     orig_size = 50   # This is the size of the PH the moments come from (so we know they are feasible)
     use_size = 50    # This is the size of the target PH
-    n = 21           # This is the number of moments to match
+              # This is the number of moments to match
+
+    n = 20
 
     ms = get_feasible_moments(original_size=orig_size, n=n)
     print(ms)
-
+    num_epochs = 400000
     ws = ms ** (-1)
-
-    (lambdas, ps, alpha), (a, T) = fit_ph_distribution(ms, use_size, num_epochs=200000, moment_weights=ws)
-
+    start = time.time()
+    (lambdas, ps, alpha), (a, T) = fit_ph_distribution(ms, use_size, num_epochs=num_epochs, moment_weights=ws)
+    runtime = time.time() - start
     original_moments = ms.detach().numpy()
     computed_moments = [m.detach().item() for m in compute_moments(a, T, use_size, n)]
     moment_table = pd.DataFrame([computed_moments, original_moments], index="computed target".split()).T
     moment_table["delta"] = moment_table["computed"] - moment_table["target"]
-    moment_table["delta-relative"] = moment_table["delta"] / moment_table["target"]
+    moment_table["delta-relative"] = 100*moment_table["delta"] / moment_table["target"]
     print(moment_table)
+
+
