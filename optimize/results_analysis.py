@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     df = pd.DataFrame([])
     num_run = np.random.randint(1, 1000000)
-    for ind in range(25):
+    for ind in range(250):
 
         orig_size = 50   # This is the size of the PH the moments come from (so we know they are feasible)
         use_size = 50    # This is the size of the target PH
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
         orig_size = np.random.randint(5, 100)
         use_size = np.random.randint(max(5,orig_size-10), 100)
-        n = 20 # np.random.randint(5,15) #min(20,np.random.randint(5, 2*orig_size-1))
+        n =  np.random.randint(5,15) #min(20,np.random.randint(5, 2*orig_size-1))
 
         print(orig_size, use_size, n)
 
@@ -65,7 +65,6 @@ if __name__ == "__main__":
         ms1 = torch.tensor(np.array(moms).flatten())
         # ms = get_feasible_moments(original_size=orig_size, n=n)
         print(ms1)
-        num_epochs = 400000
         ws1 = ms1 ** (-1)
         start = time.time()
 
@@ -92,7 +91,7 @@ if __name__ == "__main__":
         path_eshel = r'C:\Users\Eshel\workspace\data\mom_matching'
         file_name = 'num_run_' + str(num_run) + '.pkl'  #+ '_num_moms_' + str(n) + '_orig_size_' + str(orig_size) + '_use_size_' + str(
             #use_size) + '_epochs_' + str(num_epochs) + '_runtime_' + str(runtime) + '.pkl'
-        full_path = os.path.join(path_eshel, file_name)
+        full_path = os.path.join(path, file_name)
 
         curr_ind = df.shape[0]
 
