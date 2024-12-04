@@ -15,12 +15,10 @@ def compute_loss(ps, lambdas, alpha, k, ms,epoch, moment_weights=None):
     moments = torch.stack(list(moments))
 
     error = (moments - ms)
-    if epoch < 250000:
-        weighted_error = error * moment_weights
-    elif epoch < 300000:
-        weighted_error = error * moment_weights**0.5
-    else:
-        weighted_error = error*1
+
+    weighted_error = error * moment_weights
+
+
 
     ms_weighted_erorr = torch.mean(weighted_error ** 2)
 

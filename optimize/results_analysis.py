@@ -60,7 +60,7 @@ if __name__ == "__main__":
         print(orig_size, use_size, n)
 
         a, A, moms = sample(orig_size)
-        fitted_moms = 5 #  np.random.randint(5, 21)
+        fitted_moms =   np.random.randint(5, 21)
         moms = compute_first_n_moments(a, A, fitted_moms)
         ms = torch.tensor(np.array(moms).flatten())
         # ms = get_feasible_moments(original_size=orig_size, n=n)
@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
         # ms = get_feasible_moments(original_size=orig_size, n=n)
         print(ms)
-        num_epochs = 4000000
+        num_epochs = 400000
         ws = ms ** (-1)
 
         matcher = MomentMatcher(ms)
