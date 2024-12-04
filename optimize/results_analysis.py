@@ -54,30 +54,30 @@ if __name__ == "__main__":
                   # This is the number of moments to match
 
         orig_size = np.random.randint(5, 100)
-        use_size = np.random.randint(max(5,orig_size-10), 100)
-        n =  np.random.randint(5,15) #min(20,np.random.randint(5, 2*orig_size-1))
+        use_size =  np.random.randint(max(5,orig_size-10), 100)
+        n =  np.random.randint(5,21) #min(20,np.random.randint(5, 2*orig_size-1))
 
         print(orig_size, use_size, n)
 
         a, A, moms = sample(orig_size)
-        fitted_moms = np.random.randint(5, 21)
+        fitted_moms = 5 #  np.random.randint(5, 21)
         moms = compute_first_n_moments(a, A, fitted_moms)
-        ms1 = torch.tensor(np.array(moms).flatten())
+        ms = torch.tensor(np.array(moms).flatten())
         # ms = get_feasible_moments(original_size=orig_size, n=n)
-        print(ms1)
-        ws1 = ms1 ** (-1)
+        print(ms)
+        ws = ms ** (-1)
         start = time.time()
 
         # matcher = MomentMatcher(ms)
         # (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
 
-        ms = get_feasible_moments(original_size=orig_size, n=n)
+        # ms = get_feasible_moments(original_size=orig_size, n=n)
         print(ms)
-        num_epochs = 400000
+        num_epochs = 4000000
         ws = ms ** (-1)
 
-        matcher = MomentMatcher(ms1)
-        (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws1)
+        matcher = MomentMatcher(ms)
+        (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
 
         runtime = time.time() - start
         original_moments = ms.detach().numpy()
@@ -86,9 +86,12 @@ if __name__ == "__main__":
         moment_table["delta"] = moment_table["computed"] - moment_table["target"]
         moment_table["delta-relative"] = 100*moment_table["delta"] / moment_table["target"]
         print(moment_table)
+        if sys.platform == 'linux':
 
-        path = '/scratch/eliransc/mom_match'
-        path_eshel = r'C:\Users\Eshel\workspace\data\mom_matching'
+            path = '/scratch/eliransc/mom_match'
+        else:
+            path =  r'C:\Users\Eshel\workspace\data\mom_matching'
+
         file_name = 'num_run_' + str(num_run) + '.pkl'  #+ '_num_moms_' + str(n) + '_orig_size_' + str(orig_size) + '_use_size_' + str(
             #use_size) + '_epochs_' + str(num_epochs) + '_runtime_' + str(runtime) + '.pkl'
         full_path = os.path.join(path, file_name)

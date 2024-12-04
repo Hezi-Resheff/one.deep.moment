@@ -6,7 +6,7 @@ import numpy as np
 MIN_LOSS_EPSILON = 1e-8
 
 
-def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
+def compute_loss(ps, lambdas, alpha, k, ms,epoch, moment_weights=None):
     if moment_weights is None:
         moment_weights = torch.ones_like(ms)
 
@@ -15,7 +15,13 @@ def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
     moments = torch.stack(list(moments))
 
     error = (moments - ms)
-    weighted_error = error * moment_weights
+    if epoch < 250000:
+        weighted_error = error * moment_weights
+    elif epoch < 300000:
+        weighted_error = error * moment_weights**0.5
+    else:
+        weighted_error = error*1
+
     ms_weighted_erorr = torch.mean(weighted_error ** 2)
 
     return ms_weighted_erorr
@@ -45,7 +51,7 @@ class MomentMatcher(object):
 
         for epoch in range(num_epochs):
             optimizer.zero_grad()
-            loss = compute_loss(ps, lambdas, alpha, k, self.ms, moment_weights)
+            loss = compute_loss(ps, lambdas, alpha, k, self.ms, epoch , moment_weights )
 
             if loss < MIN_LOSS_EPSILON:
                 break
@@ -60,6 +66,9 @@ class MomentMatcher(object):
                     moments = compute_moments(a, T, k, len(self.ms))
                     moments = torch.stack(list(moments)).detach().numpy().round(2)
                     print(f" => moments are: {moments}")
+                    print(f" => true moments are: {self.ms}")
+                    print(100 * (self.ms - moments) / self.ms)
+
                     if np.isnan(moments).sum() > 0:
                         return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
 
