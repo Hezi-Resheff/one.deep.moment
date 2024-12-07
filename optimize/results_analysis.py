@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
             # ms = get_feasible_moments(original_size=orig_size, n=n)
             print(ms)
-            num_epochs = 700000
+            num_epochs = 600000
             ws = ms ** (-1)
 
             matcher = MomentMatcher(ms)
