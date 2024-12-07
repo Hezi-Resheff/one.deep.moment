@@ -1,25 +1,21 @@
 import torch
 from util import *
 import numpy as np
-
+import pickle as pkl
+import os
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-8
 
 
-def compute_loss(ps, lambdas, alpha, k, ms,epoch, moment_weights=None):
+def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
     if moment_weights is None:
         moment_weights = torch.ones_like(ms)
 
     a, T = make_ph(lambdas, ps, alpha, k)
     moments = compute_moments(a, T, k, len(ms))
     moments = torch.stack(list(moments))
-
     error = (moments - ms)
-
     weighted_error = error * moment_weights
-
-
-
     ms_weighted_erorr = torch.mean(weighted_error ** 2)
 
     return ms_weighted_erorr
@@ -31,7 +27,7 @@ class MomentMatcher(object):
 
     def fit_ph_distribution(self, k, num_epochs=1000, moment_weights=None,
                             lambda_scale=100, lr=1e-4, init=None):
-
+        loss_list = []
         # lambda_scale = 1000
         # init
         if init is None:
@@ -49,7 +45,18 @@ class MomentMatcher(object):
 
         for epoch in range(num_epochs):
             optimizer.zero_grad()
-            loss = compute_loss(ps, lambdas, alpha, k, self.ms, epoch , moment_weights )
+            loss = compute_loss(ps, lambdas, alpha, k, self.ms,  moment_weights )
+            loss_list.append(loss.item())
+
+            if len(loss_list) > 40000:
+                if 100*np.abs((loss_list[-35000]-loss.item())/loss.item()) < 0.01:
+                    print('########## breaking - stuck in local minumum #########')
+                    break
+                elif loss.item() > 10e10:
+                    print('########## breaking - loss is too big #########')
+                    break
+
+
 
             if loss < MIN_LOSS_EPSILON:
                 break
@@ -88,7 +95,7 @@ class MomentMatcher(object):
             this_out = self.fit_ph_distribution(k, num_epochs=num_epochs, moment_weights=moment_weights,
                                                 lambda_scale=lambda_scale, lr=lr, init=init)
 
-            (lambdas, ps, alpha), (a, T) = this_out
+            (lambdas, ps, alpha), (a, T), moments, loss = this_out
             out[k] = this_out
             lambdas, ps, alpha = embedd_next_parametrization(lambdas, ps, alpha, k)
 
@@ -140,13 +147,24 @@ if __name__ == "__main__":
     # compare_moment_methods()
 
     ms = get_feasible_moments(original_size=100, n=10)
+    ms = torch.tensor([1, 1.226187, 1.699542, 2.571434, 4.188616, 7.312320e+00, 1.367149e+01])
     ws = ms ** (-1)
 
     matcher = MomentMatcher(ms)
-    out = matcher.fit_cascade(k_min=3, k_max=3, num_epochs=100000, moment_weights=ws, lambda_scale=10, lr=1e-4)
+    out = matcher.fit_cascade(k_min=3, k_max=15, num_epochs=400000, moment_weights=ws, lambda_scale=10, lr=1e-4)
 
     k = 3
-    (lambdas, ps, alpha), (a, T) = out[k]
+    (lambdas, ps, alpha), (a, T)= out[k]
     moment_table = moment_analytics(ms, compute_moments(a, T, k, len(ms)))
+    path = r'C:\Users\Eshel\workspace\data\cascade'
     print(moment_table)
+    num_run = np.random.randint(0,10000)
+
+    errors_mom = {}
+    for key in out.keys():
+        errors_mom[key]  = (out[key][-2] - np.array(ms)) / np.array(ms)
+
+    pkl.dump((errors_mom, np.array(ms)), open(os.path.join(path, str(num_run) + '_out.pkl'), 'wb'))
+
+
 

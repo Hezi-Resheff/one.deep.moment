@@ -9,7 +9,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
-
+import pickle as pkl
 
 def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
     # Compute central moments
@@ -45,89 +45,100 @@ def get_feasible_moments(original_size, n):
 
 if __name__ == "__main__":
 
+    if sys.platform == 'linux':
+        bad_np, orig_size_arr = pkl.load( open('/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/bad_df.pkl', 'rb'))
+    else:
+        bad_np, orig_size_arr = pkl.load( open(r'C:\Users\Eshel\workspace\data\bad_df.pkl', 'rb'))
+
+
+
     df = pd.DataFrame([])
     num_run = np.random.randint(1, 1000000)
-    for ind in range(250):
+    for index in range(250):
 
-        orig_size = 50   # This is the size of the PH the moments come from (so we know they are feasible)
-        use_size = 50    # This is the size of the target PH
-                  # This is the number of moments to match
+        ind_example = np.random.randint(0,bad_np.shape[0])
 
-        orig_size = np.random.randint(5, 100)
-        use_size =  np.random.randint(max(5,orig_size-10), 100)
-        n =  np.random.randint(5,21) #min(20,np.random.randint(5, 2*orig_size-1))
+        for use_size in  np.linspace(5,100, 20).astype(int):
 
-        print(orig_size, use_size, n)
+            orig_size = orig_size_arr[ind_example]
+            # This is the size of the target PH
+                      # This is the number of moments to match
+            ms = torch.tensor(bad_np[ind_example, ~np.isnan(bad_np[ind_example, :])])
 
-        a, A, moms = sample(orig_size)
-        fitted_moms =   np.random.randint(5, 21)
-        moms = compute_first_n_moments(a, A, fitted_moms)
-        ms = torch.tensor(np.array(moms).flatten())
-        # ms = get_feasible_moments(original_size=orig_size, n=n)
-        print(ms)
-        ws = ms ** (-1)
-        start = time.time()
+            n =  ms.shape[0] #np.random.randint(5,21) #min(20,np.random.randint(5, 2*orig_size-1))
 
-        # matcher = MomentMatcher(ms)
-        # (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
+            # a, A, moms = sample(orig_size)
+            # fitted_moms =   np.random.randint(5, 21)
+            # moms = compute_first_n_moments(a, A, fitted_moms)
+            # ms = torch.tensor(np.array(moms).flatten())
+            # ms = get_feasible_moments(original_size=orig_size, n=n)
+            print(ms)
+            # ms = torch.tensor([1, 1.226187 ,  1.699542,  2.571434,   4.188616,  7.312320e+00, 1.367149e+01])
+            # use_size = 20
 
-        # ms = get_feasible_moments(original_size=orig_size, n=n)
-        print(ms)
-        num_epochs = 400000
-        ws = ms ** (-1)
+            ws = ms ** (-1)
+            start = time.time()
 
-        matcher = MomentMatcher(ms)
-        (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
+            # matcher = MomentMatcher(ms)
+            # (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
 
-        runtime = time.time() - start
-        original_moments = ms.detach().numpy()
-        computed_moments = [m.detach().item() for m in compute_moments(a, T, use_size, n)]
-        moment_table = pd.DataFrame([computed_moments, original_moments], index="computed target".split()).T
-        moment_table["delta"] = moment_table["computed"] - moment_table["target"]
-        moment_table["delta-relative"] = 100*moment_table["delta"] / moment_table["target"]
-        print(moment_table)
-        if sys.platform == 'linux':
+            # ms = get_feasible_moments(original_size=orig_size, n=n)
+            print(ms)
+            num_epochs = 400000
+            ws = ms ** (-1)
 
-            path = '/scratch/eliransc/mom_match'
-        else:
-            path =  r'C:\Users\Eshel\workspace\data\mom_matching'
+            matcher = MomentMatcher(ms)
+            (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
 
-        file_name = 'num_run_' + str(num_run) + '.pkl'  #+ '_num_moms_' + str(n) + '_orig_size_' + str(orig_size) + '_use_size_' + str(
-            #use_size) + '_epochs_' + str(num_epochs) + '_runtime_' + str(runtime) + '.pkl'
-        full_path = os.path.join(path, file_name)
+            runtime = time.time() - start
+            original_moments = ms.detach().numpy()
+            computed_moments = [m.detach().item() for m in compute_moments(a, T, use_size, n)]
+            moment_table = pd.DataFrame([computed_moments, original_moments], index="computed target".split()).T
+            moment_table["delta"] = moment_table["computed"] - moment_table["target"]
+            moment_table["delta-relative"] = 100*moment_table["delta"] / moment_table["target"]
+            print(moment_table)
+            if sys.platform == 'linux':
 
-        curr_ind = df.shape[0]
+                path = '/scratch/eliransc/mom_match'
+            else:
+                path =  r'C:\Users\Eshel\workspace\data\mom_matching'
 
-        df.loc[curr_ind, 'runtime'] = runtime
-        df.loc[curr_ind, 'numepochs'] = num_epochs
-        df.loc[curr_ind, 'orig_PH_size'] = orig_size
-        df.loc[curr_ind, 'fitted_PH_size'] = use_size
-        df.loc[curr_ind, 'num_fitted_moms'] = n
+            file_name = 'num_run_' + str(num_run) + '.pkl'  #+ '_num_moms_' + str(n) + '_orig_size_' + str(orig_size) + '_use_size_' + str(
+                #use_size) + '_epochs_' + str(num_epochs) + '_runtime_' + str(runtime) + '.pkl'
+            full_path = os.path.join(path, file_name)
+
+            curr_ind = df.shape[0]
+
+            df.loc[curr_ind, 'runtime'] = runtime
+            df.loc[curr_ind, 'numepochs'] = num_epochs
+            df.loc[curr_ind, 'orig_PH_size'] = orig_size
+            df.loc[curr_ind, 'fitted_PH_size'] = use_size
+            df.loc[curr_ind, 'num_fitted_moms'] = n
+            df.loc[curr_ind, 'example_ind'] = ind_example
+
+            for ind in range(moment_table.shape[0]):
+                df.loc[curr_ind, 'true_moms_' + str(ind + 1)] = moment_table.loc[ind, 'target']
+
+            for ind in range(moment_table.shape[0]):
+                df.loc[curr_ind, 'fitted_moms_' + str(ind + 1)] = moment_table.loc[ind, 'computed']
+
+            for ind in range(moment_table.shape[0]):
+                df.loc[curr_ind, 'error_' + str(ind + 1)] = moment_table.loc[ind, 'delta-relative']
+
+            m1, m2, m3, m4 = df.loc[curr_ind, 'true_moms_1'], df.loc[curr_ind, 'true_moms_2'], df.loc[
+                curr_ind, 'true_moms_3'], df.loc[
+                curr_ind, 'true_moms_4']
+
+            skew, kurt = compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4)
+
+            df.loc[curr_ind, 'skewness'] = skew
+            df.loc[curr_ind, 'kurtosis'] = kurt
 
 
+            pkl.dump(df, open(full_path, 'wb'))
+            print(df)
 
-        for ind in range(moment_table.shape[0]):
-            df.loc[curr_ind, 'true_moms_' + str(ind + 1)] = moment_table.loc[ind, 'target']
-
-        for ind in range(moment_table.shape[0]):
-            df.loc[curr_ind, 'fitted_moms_' + str(ind + 1)] = moment_table.loc[ind, 'computed']
-
-        for ind in range(moment_table.shape[0]):
-            df.loc[curr_ind, 'error_' + str(ind + 1)] = moment_table.loc[ind, 'delta-relative']
-
-        m1, m2, m3, m4 = df.loc[curr_ind, 'true_moms_1'], df.loc[curr_ind, 'true_moms_2'], df.loc[
-            curr_ind, 'true_moms_3'], df.loc[
-            curr_ind, 'true_moms_4']
-
-        skew, kurt = compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4)
-
-        df.loc[curr_ind, 'skewness'] = skew
-        df.loc[curr_ind, 'kurtosis'] = kurt
-
-
-
-
-        pkl.dump(df, open(full_path, 'wb'))
-        print(df)
+            if moment_table["delta-relative"].abs().mean() < 1:
+                break
 
 
