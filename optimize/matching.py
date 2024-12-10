@@ -3,9 +3,11 @@ from util import *
 import numpy as np
 import pickle as pkl
 import os
+import sys
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-8
-
+sys.path.append(os.path.abspath(".."))
+from utils_sample_ph import *
 
 def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
     if moment_weights is None:
@@ -14,6 +16,7 @@ def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
     a, T = make_ph(lambdas, ps, alpha, k)
     moments = compute_moments(a, T, k, len(ms))
     moments = torch.stack(list(moments))
+
     error = (moments - ms)
     weighted_error = error * moment_weights
     ms_weighted_erorr = torch.mean(weighted_error ** 2)
@@ -31,9 +34,11 @@ class MomentMatcher(object):
         # lambda_scale = 1000
         # init
         if init is None:
+
+
             ps = torch.randn(k, k, requires_grad=True)
             lambdas = torch.tensor(torch.rand(k)*lambda_scale, requires_grad=True)
-            alpha = torch.randn(k, requires_grad=True)
+            alpha = torch.rand(k, requires_grad=True)
         else:
             lambdas, ps, alpha = init
             lambdas = lambdas.detach().requires_grad_(True)
@@ -49,7 +54,7 @@ class MomentMatcher(object):
             loss_list.append(loss.item())
 
             if len(loss_list) > 40000:
-                if 100*np.abs((loss_list[-35000]-loss.item())/loss.item()) < 0.01:
+                if 100*np.abs((loss_list[-35000]-loss.item())/loss.item()) < 0.001:
                     print('########## breaking - stuck in local minumum #########')
                     break
                 elif loss.item() > 10e10:
@@ -70,6 +75,8 @@ class MomentMatcher(object):
                     a, T = make_ph(lambdas, ps, alpha, k)
                     moments = compute_moments(a, T, k, len(self.ms))
                     moments = torch.stack(list(moments)).detach().numpy().round(2)
+
+
                     print(f" => moments are: {moments}")
                     print(f" => true moments are: {self.ms}")
                     print(100 * (self.ms - moments) / self.ms)

@@ -56,14 +56,16 @@ if __name__ == "__main__":
     num_run = np.random.randint(1, 1000000)
     for index in range(250):
 
-        ind_example = np.random.randint(0,bad_np.shape[0])
+        ind_example =  169 #np.random.randint(0,bad_np.shape[0])
 
-        for use_size in  np.linspace(5,100, 20).astype(int):
+        for use_size in  np.linspace(70,70, 1).astype(int):
 
-            orig_size = orig_size_arr[ind_example]
+            orig_size = 5 # orig_size_arr[ind_example]
             # This is the size of the target PH
                       # This is the number of moments to match
             ms = torch.tensor(bad_np[ind_example, ~np.isnan(bad_np[ind_example, :])])
+
+            ms = ms[:5]
 
             n =  ms.shape[0] #np.random.randint(5,21) #min(20,np.random.randint(5, 2*orig_size-1))
 
@@ -84,7 +86,7 @@ if __name__ == "__main__":
 
             # ms = get_feasible_moments(original_size=orig_size, n=n)
             print(ms)
-            num_epochs = 600000
+            num_epochs = 2000000
             ws = ms ** (-1)
 
             matcher = MomentMatcher(ms)

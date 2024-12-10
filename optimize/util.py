@@ -30,6 +30,7 @@ def make_ph(lambdas, ps, alpha, k):
     p = torch.nn.functional.softmax(ps, 1)
     lambdas_on_rows = ls.repeat(k, 1).T
     T = (p + torch.diag(-1 - torch.diag(p))) * lambdas_on_rows
+
     return a, T
 
 
