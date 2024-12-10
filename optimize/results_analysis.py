@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
             # ms = get_feasible_moments(original_size=orig_size, n=n)
             print(ms)
-            num_epochs = 200000
+            num_epochs = 250000
             ws = ms ** (-1)
 
             matcher = MomentMatcher(ms)
@@ -179,9 +179,9 @@ if __name__ == "__main__":
         print('stop')
 
         if sys.platform == 'linux':
-            pkl.dump(tot_df, open(os.path.join('/scratch/eliransc/mom_results_5_moments', num_run +  '_tot_df.pkl'), 'wb'))
+            pkl.dump(tot_df, open(os.path.join('/scratch/eliransc/mom_results_5_moments', str(num_run) +  '_tot_df.pkl'), 'wb'))
         else:
-            pkl.dump(tot_df, open(os.path.join(r'C:\Users\Eshel\workspace\data\mom_match', num_run + '_tot_df.pkl'), 'wb'))
+            pkl.dump(tot_df, open(os.path.join(r'C:\Users\Eshel\workspace\data\mom_match', str(num_run) + '_tot_df.pkl'), 'wb'))
 
 
 
