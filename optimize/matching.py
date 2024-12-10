@@ -54,7 +54,7 @@ class MomentMatcher(object):
             loss_list.append(loss.item())
 
             if len(loss_list) > 40000:
-                if 100*np.abs((loss_list[-35000]-loss.item())/loss.item()) < 0.001:
+                if 100*np.abs((loss_list[-35000]-loss.item())/loss.item()) < 0.01:
                     print('########## breaking - stuck in local minumum #########')
                     break
                 elif loss.item() > 10e10:

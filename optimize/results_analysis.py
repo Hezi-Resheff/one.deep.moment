@@ -42,43 +42,67 @@ def get_feasible_moments(original_size, n):
     momenets = torch.stack(list(ms))
     return momenets
 
+def sample_PH(LB, UB, fitted_moms = 5):
+    flag = True
+
+    while flag:
+
+        orig_size = np.random.randint(5, 101)
+        a, A, moms = sample(orig_size)
+
+        moms = compute_first_n_moments(a, A, fitted_moms)
+        ms = torch.tensor(np.array(moms).flatten())
+        if (ms[1]> LB) & (ms[1] < UB):
+            flag = False
+
+    return a, A, ms
 
 if __name__ == "__main__":
 
-    if sys.platform == 'linux':
-        bad_np, orig_size_arr = pkl.load( open('/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/bad_df.pkl', 'rb'))
-    else:
-        bad_np, orig_size_arr = pkl.load( open(r'C:\Users\Eshel\workspace\data\bad_df.pkl', 'rb'))
+    # if sys.platform == 'linux':
+    #     bad_np, orig_size_arr = pkl.load( open('/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/bad_df.pkl', 'rb'))
+    # else:
+    #     bad_np, orig_size_arr = pkl.load( open(r'C:\Users\Eshel\workspace\data\bad_df.pkl', 'rb'))
 
 
 
-    df = pd.DataFrame([])
+    tot_df = pd.DataFrame([])
     num_run = np.random.randint(1, 1000000)
-    for index in range(250):
+    for trial in range(250):
+        df = pd.DataFrame([])
+        dict_range = {0: [2, 6], 1: [6, 10], 2: [10, 14]}
 
-        ind_example =  169 #np.random.randint(0,bad_np.shape[0])
+        key = np.random.randint(len(dict_range.keys()))
 
-        for use_size in  np.linspace(70,70, 1).astype(int):
+        LB, UB = dict_range[key]
+        fitted_moms =  5 # np.random.randint(5, 21)
+        a, A, ms = sample_PH(LB, UB, fitted_moms)
+        # ms = get_feasible_moments(original_size=orig_size, n=n)
+        print(ms)
+        # use_size = 20
+        orig_size = A.shape[0]
+        ws = ms ** (-1)
+        # for index in range(250):
 
-            orig_size = 5 # orig_size_arr[ind_example]
+            # ind_example =  169 #np.random.randint(0,bad_np.shape[0])
+
+        for use_size in  np.linspace(4,80, 20).astype(int):
+
+            # orig_size = 5 # orig_size_arr[ind_example]
             # This is the size of the target PH
                       # This is the number of moments to match
-            ms = torch.tensor(bad_np[ind_example, ~np.isnan(bad_np[ind_example, :])])
+            # ms = torch.tensor(bad_np[ind_example, ~np.isnan(bad_np[ind_example, :])])
 
-            ms = ms[:5]
+            # ms = ms[:5]
 
-            n =  ms.shape[0] #np.random.randint(5,21) #min(20,np.random.randint(5, 2*orig_size-1))
-
+            # n =  ms.shape[0] #np.random.randint(5,21) #min(20,np.random.randint(5, 2*orig_size-1))
+            # orig_size = np.random.randint(5,101)
             # a, A, moms = sample(orig_size)
             # fitted_moms =   np.random.randint(5, 21)
             # moms = compute_first_n_moments(a, A, fitted_moms)
             # ms = torch.tensor(np.array(moms).flatten())
-            # ms = get_feasible_moments(original_size=orig_size, n=n)
-            print(ms)
-            # ms = torch.tensor([1, 1.226187 ,  1.699542,  2.571434,   4.188616,  7.312320e+00, 1.367149e+01])
-            # use_size = 20
 
-            ws = ms ** (-1)
+
             start = time.time()
 
             # matcher = MomentMatcher(ms)
@@ -86,7 +110,7 @@ if __name__ == "__main__":
 
             # ms = get_feasible_moments(original_size=orig_size, n=n)
             print(ms)
-            num_epochs = 2000000
+            num_epochs = 200000
             ws = ms ** (-1)
 
             matcher = MomentMatcher(ms)
@@ -94,7 +118,7 @@ if __name__ == "__main__":
 
             runtime = time.time() - start
             original_moments = ms.detach().numpy()
-            computed_moments = [m.detach().item() for m in compute_moments(a, T, use_size, n)]
+            computed_moments = [m.detach().item() for m in compute_moments(a, T, use_size, ms.shape[0])]
             moment_table = pd.DataFrame([computed_moments, original_moments], index="computed target".split()).T
             moment_table["delta"] = moment_table["computed"] - moment_table["target"]
             moment_table["delta-relative"] = 100*moment_table["delta"] / moment_table["target"]
@@ -115,8 +139,7 @@ if __name__ == "__main__":
             df.loc[curr_ind, 'numepochs'] = num_epochs
             df.loc[curr_ind, 'orig_PH_size'] = orig_size
             df.loc[curr_ind, 'fitted_PH_size'] = use_size
-            df.loc[curr_ind, 'num_fitted_moms'] = n
-            df.loc[curr_ind, 'example_ind'] = ind_example
+            df.loc[curr_ind, 'num_fitted_moms'] = ms.shape[0]
 
             for ind in range(moment_table.shape[0]):
                 df.loc[curr_ind, 'true_moms_' + str(ind + 1)] = moment_table.loc[ind, 'target']
@@ -140,7 +163,30 @@ if __name__ == "__main__":
             pkl.dump(df, open(full_path, 'wb'))
             print(df)
 
-            if moment_table["delta-relative"].abs().mean() < 1:
+            if (moment_table["delta-relative"].abs().max()).item() < 0.2:
                 break
+
+
+
+        ind_tot = tot_df.shape[0]
+        error_columns = [col for col in df.columns if col.startswith('error_')]
+        best_ind  = df[error_columns].abs().mean(axis = 1).argmin().item()
+
+        for col in df.columns:
+            tot_df.loc[ind_tot, col] = df.loc[best_ind, col]
+        tot_df.loc[ind_tot, 'tot_run_time'] = df.loc[:best_ind,'runtime'].sum()
+
+        print('stop')
+
+        if sys.platform == 'linux':
+            pkl.dump(tot_df, open(os.path.join('/scratch/eliransc/mom_results_5_moments', num_run +  '_tot_df.pkl'), 'wb'))
+        else:
+            pkl.dump(tot_df, open(os.path.join(r'C:\Users\Eshel\workspace\data\mom_match', num_run + '_tot_df.pkl'), 'wb'))
+
+
+
+
+
+
 
 
