@@ -83,6 +83,20 @@ def moment_analytics(ms, comp):
     return moment_table
 
 
+def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
+    # Compute central moments
+    mu2 = m2 - m1**2
+    mu3 = m3 - 3*m1*m2 + 2*m1**3
+    mu4 = m4 - 4*m1*m3 + 6*m1**2*m2 - 3*m1**4
+
+    # Compute skewness and kurtosis
+    skewness = mu3 / (mu2 ** 1.5)
+    kurtosis = mu4 / (mu2 ** 2)
+    excess_kurtosis = kurtosis - 3
+
+    return skewness, kurtosis
+
+
 if __name__ == "__main__":
     from matching import *
 

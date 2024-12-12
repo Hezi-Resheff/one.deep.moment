@@ -11,6 +11,7 @@ sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
 import pickle as pkl
 
+
 def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
     # Compute central moments
     mu2 = m2 - m1**2
@@ -23,6 +24,7 @@ def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
     excess_kurtosis = kurtosis - 3
 
     return skewness, kurtosis
+
 
 def get_feasible_moments(original_size, n):
     """ Compute feasible k-moments by sampling from high order PH and scaling """
@@ -42,6 +44,7 @@ def get_feasible_moments(original_size, n):
     momenets = torch.stack(list(ms))
     return momenets
 
+
 def sample_PH(LB, UB, fitted_moms = 5):
     flag = True
 
@@ -56,6 +59,7 @@ def sample_PH(LB, UB, fitted_moms = 5):
             flag = False
 
     return a, A, ms
+
 
 if __name__ == "__main__":
 
