@@ -31,6 +31,7 @@ def make_ph(lambdas, ps, alpha, k):
     lambdas_on_rows = ls.repeat(k, 1).T
     T = (p + torch.diag(-1 - torch.diag(p))) * lambdas_on_rows
 
+
     return a, T
 
 
@@ -124,3 +125,49 @@ if __name__ == "__main__":
     example_embedd_parametrization()
 
 
+def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
+    # Compute central moments
+    mu2 = m2 - m1**2
+    mu3 = m3 - 3*m1*m2 + 2*m1**3
+    mu4 = m4 - 4*m1*m3 + 6*m1**2*m2 - 3*m1**4
+
+    # Compute skewness and kurtosis
+    skewness = mu3 / (mu2 ** 1.5)
+    kurtosis = mu4 / (mu2 ** 2)
+    excess_kurtosis = kurtosis - 3
+
+    return skewness, kurtosis
+
+
+def get_feasible_moments(original_size, n):
+    """ Compute feasible k-moments by sampling from high order PH and scaling """
+    k = original_size
+    ps = torch.randn(k, k)
+    lambdas = torch.rand(k) * 100
+    alpha = torch.randn(k)
+    a, T = make_ph(lambdas, ps, alpha, k)
+
+    # Compute mean
+    ms = compute_moments(a, T, k, 1)
+    m1 = torch.stack(list(ms)).item()
+
+    # Scale
+    T = T * m1
+    ms = compute_moments(a, T, k, n)
+    momenets = torch.stack(list(ms))
+    return momenets
+
+def sample_PH(LB, UB, fitted_moms = 5):
+    flag = True
+
+    while flag:
+
+        orig_size = np.random.randint(5, 101)
+        a, A, moms = sample(orig_size)
+
+        moms = compute_first_n_moments(a, A, fitted_moms)
+        ms = torch.tensor(np.array(moms).flatten())
+        if (ms[1]> LB) & (ms[1] < UB):
+            flag = False
+
+    return a, A, ms

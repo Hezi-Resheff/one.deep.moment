@@ -64,29 +64,36 @@ if __name__ == "__main__":
     # else:
     #     bad_np, orig_size_arr = pkl.load( open(r'C:\Users\Eshel\workspace\data\bad_df.pkl', 'rb'))
 
-
-
     tot_df = pd.DataFrame([])
     num_run = np.random.randint(1, 1000000)
     for trial in range(250):
         df = pd.DataFrame([])
-        dict_range = {0: [2, 6], 1: [6, 10], 2: [10, 14]}
+        # dict_range = {0: [2, 6], 1: [6, 10], 2: [10, 14]}
+        #
+        # key = np.random.randint(len(dict_range.keys()))
+        #
+        # LB, UB = dict_range[key]
+        # fitted_moms =  5 # np.random.randint(5, 21)
+        # a, A, ms = sample_PH(LB, UB, fitted_moms)
+        orig_size = 100
+        n = 5
+        ms = get_feasible_moments(original_size=orig_size, n=n)
 
-        key = np.random.randint(len(dict_range.keys()))
+        # bad_moms = pkl.load( open(r'C:\Users\Eshel\workspace\data\mom_mathcher_data\bad_moms_5.pkl', 'rb'))
+        a,A, ms  = pkl.load( open(r'C:\Users\Eshel\workspace\data\mom_mathcher_data\erlang_100.pkl', 'rb'))
+        # ind_bad_moms = 0 # np.random.randint(bad_moms.shape[0])
+        #
+        # ms = torch.tensor(bad_moms[ind_bad_moms, :-1])
 
-        LB, UB = dict_range[key]
-        fitted_moms =  5 # np.random.randint(5, 21)
-        a, A, ms = sample_PH(LB, UB, fitted_moms)
-        # ms = get_feasible_moments(original_size=orig_size, n=n)
         print(ms)
         # use_size = 20
-        orig_size = A.shape[0]
+        # orig_size = int(bad_moms[ind_bad_moms, -1])
         ws = ms ** (-1)
         # for index in range(250):
 
             # ind_example =  169 #np.random.randint(0,bad_np.shape[0])
 
-        for use_size in  np.linspace(4,80, 20).astype(int):
+        for use_size in  np.linspace(100,100, 1).astype(int):
 
             # orig_size = 5 # orig_size_arr[ind_example]
             # This is the size of the target PH
