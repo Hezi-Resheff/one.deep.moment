@@ -166,11 +166,10 @@ class MomentMatcher(object):
 
     def fit_ph_distribution(self, k, num_epochs=1000, moment_weights=None,
                             lambda_scale=100, lr=1e-4, init=None):
-        loss_list = []
-        # lambda_scale = 1000
+        loss_history = []
+
         # init
         if init is None:
-
             ps = torch.randn(k, k, requires_grad=True)
             lambdas = torch.tensor(torch.rand(k)*lambda_scale, requires_grad=True)
             alpha = torch.rand(k, requires_grad=True)
@@ -186,10 +185,10 @@ class MomentMatcher(object):
         for epoch in range(num_epochs):
             optimizer.zero_grad()
             loss = compute_loss(ps, lambdas, alpha, k, self.ms,  moment_weights )
-            loss_list.append(loss.item())
+            loss_history.append(loss.item())
 
-            if len(loss_list) > 20000:
-                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
+            if len(loss_history) > 40000:
+                if 100*np.abs((loss_history[-35000]-loss.item())/loss.item()) < 0.01:
                     print('########## breaking - stuck in local minumum #########')
                     break
                 elif loss.item() > 10e10:
@@ -201,7 +200,6 @@ class MomentMatcher(object):
                 break
 
             if loss < MIN_LOSS_EPSILON:
-                print('########## loss lower than epsilon #########')
                 break
 
             loss.backward()
@@ -214,14 +212,12 @@ class MomentMatcher(object):
                     moments = compute_moments(a, T, k, len(self.ms))
                     moments = torch.stack(list(moments)).detach().numpy().round(2)
 
-
                     print(f" => moments are: {moments}")
                     print(f" => true moments are: {self.ms}")
                     print(100 * (self.ms - moments) / self.ms)
 
                     if np.isnan(moments).sum() > 0:
                         return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
-
 
         return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
 
@@ -256,43 +252,10 @@ def fit_ph_distribution(ms, **params):
 if __name__ == "__main__":
     from utils import compute_first_n_moments
 
-    def make_a_ph():
-        """ sanity check for the make_ft function """
-        k = 3
-        ps = torch.randn(k, k)
-        lambdas = torch.rand(k)
-        alpha = torch.randn(k)
-        a, T = make_ph(lambdas, ps, alpha, k)
-        print("="*20)
-        print("Sum of a: ", a.sum())
-        print("="*20)
-        print(T)
-        print("Sum of T rows: ", T.sum(axis=1))
-        print("=" * 20)
+    def stuff_eliran_was_running():
 
-    def compare_moment_methods():
-        """ test the moment function... """
-        k = 3
-        ps = torch.randn(k, k)
-        lambdas = torch.rand(k)
-        alpha = torch.randn(k)
-        a, T = make_ph(lambdas, ps, alpha, k)
-
-        # External moment computation
-        m_there = compute_first_n_moments(a, T, n=2*k-1)
-
-        # This moment computation
-        m_here = compute_moments(a, T, k, 2*k-1)
-
-        # Compare
-        for i, (m1, m2) in enumerate(zip(m_here, m_there)):
-            print(f"Moment {i+1} is {m1:.3f} and {m2:.3f}")
-
-    # make_a_ph()
-    # compare_moment_methods()
-    def old_studd_no_longer_needed():
         ms = get_feasible_moments(original_size=100, n=10)
-        ms = torch.tensor([1.        ,  1.88679887,  4.30712788, 10.73816182, 28.43716296])
+        ms = torch.tensor([1, 1.226187, 1.699542, 2.571434, 4.188616, 7.312320e+00, 1.367149e+01])
         ws = ms ** (-1)
 
         matcher = MomentMatcher(ms)
@@ -301,182 +264,16 @@ if __name__ == "__main__":
         k = 3
         (lambdas, ps, alpha), (a, T)= out[k]
         moment_table = moment_analytics(ms, compute_moments(a, T, k, len(ms)))
+
         path = r'C:\Users\Eshel\workspace\data\cascade'
         print(moment_table)
-        num_run = np.random.randint(0,10000)
+        num_run = np.random.randint(0, 10000)
 
         errors_mom = {}
         for key in out.keys():
-            errors_mom[key]  = (out[key][-2] - np.array(ms)) / np.array(ms)
+            errors_mom[key] = (out[key][-2] - np.array(ms)) / np.array(ms)
 
         pkl.dump((errors_mom, np.array(ms)), open(os.path.join(path, str(num_run) + '_out.pkl'), 'wb'))
-
-    # ms = torch.tensor([1.0000, 1.4652, 2.4290, 4.1820, 7.3312])
-    # ws = ms ** (-1)
-    # t = MultiErlangMomentMatcher(ms=ms, ls=[30, 70])
-    # loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=60000, lr=5e-3)
-    # print(loss, a, T)
-
-    # ms = torch.tensor([1.0000,  1.3744,  2.3966,  4.8198, 10.5801])
-    ms1 = torch.tensor([1.        , 1.02777778, 1.08487654, 1.17528292, 1.30586991])
-    ms2 = torch.tensor([1., 1.88679887, 4.30712788, 10.73816182, 28.43716296])
-    ms3 = torch.tensor([1.0000,  1.2177,  2.1422,  6.4340, 30.2064])
-
-
-    def print_score(res):
-        iteration = len(res.func_vals)
-        current_score = res.func_vals[-1]
-        sol = res.x
-        print(f"Iteration {iteration}: Current score = {current_score} solution =  {sol}")
-
-
-    class StopWhenThresholdReached:
-        def __init__(self, threshold):
-            self.threshold = threshold  # The desired stopping criterion (value)
-
-        def __call__(self, res):
-            # Check the best function value so far
-            best_value = res.fun
-            if best_value <= self.threshold:
-                print(f"Threshold reached: {best_value} <= {self.threshold}")
-                return True  # Stop optimization
-            return False  # Continue optimization
-
-
-    path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models'
-
-    df_tot_res = pd.DataFrame([])
-
-    run_num_tot =  np.random.randint(1,10000000)
-
-
-
-    def cost_function(params):
-        # Example: let's assume a simple quadratic cost function for demonstration
-        ls = [l for l in params if l > 0]  # size 0 blocks don't count
-
-        if np.array(params).sum() > 22:
-            return 1e10
-
-        print(f"    => Going with ls: {ls}")
-
-        ws = ms ** (-1)
-        t = MultiErlangMomentMatcher(ms=ms, ls=ls)
-        loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=6000, lr=5e-3)
-
-        moments = compute_moments(a, T, T.shape[0], len(ms))
-        moments = torch.stack(list(moments)).detach().numpy().round(2)
-
-        print(f" => moments are: {moments}")
-        print(f" => true moments are: {ms}")
-
-        errors = 100 * (ms - moments) / ms
-
-        print(errors)
-        df_res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
-
-        dict_PH_per_iteration = pkl.load(
-            open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'rb'))
-
-        curr_ind = df_res.shape[0]
-        df_res.loc[curr_ind, 'true_mom_1'] = ms[0].item()
-        df_res.loc[curr_ind, 'true_mom_2'] = ms[1].item()
-        df_res.loc[curr_ind, 'true_mom_3'] = ms[2].item()
-        df_res.loc[curr_ind, 'true_mom_4'] = ms[3].item()
-        df_res.loc[curr_ind, 'true_mom_5'] = ms[4].item()
-
-        df_res.loc[curr_ind, 'est_mom_1'] = moments[0].item()
-        df_res.loc[curr_ind, 'est_mom_2'] = moments[1].item()
-        df_res.loc[curr_ind, 'est_mom_3'] = moments[2].item()
-        df_res.loc[curr_ind, 'est_mom_4'] = moments[3].item()
-        df_res.loc[curr_ind, 'est_mom_5'] = moments[4].item()
-
-        errors = errors.abs()
-        df_res.loc[curr_ind, 'error_1'] = errors[0].item()
-        df_res.loc[curr_ind, 'error_2'] = errors[1].item()
-        df_res.loc[curr_ind, 'error_3'] = errors[2].item()
-        df_res.loc[curr_ind, 'error_4'] = errors[3].item()
-        df_res.loc[curr_ind, 'error_5'] = errors[4].item()
-
-        print(df_res)
-
-        dict_PH_per_iteration[curr_ind] = (a, T)
-
-        pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
-        pkl.dump(dict_PH_per_iteration,
-                 open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
-
-        return loss
-
-
-    ms_list = [ms1, ms2, ms3]
-
-    for ms in ms_list:
-
-        time_start = time.time()
-
-        model_name = np.random.randint(1,1000000)
-        print('!!!!!!!!!!!!! new iteration !!!!!!!!!!!!!')
-
-        print(model_name)
-
-        df_res = pd.DataFrame([])
-        pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
-
-        dict_PH_per_iteration = {}
-
-        pkl.dump(dict_PH_per_iteration, open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
-
-
-        # Define the search space for each parameter
-        space = [
-            Integer(0, 12, name='l1'),  # Continuous space for x1 between 0 and 10
-            Integer(0, 12, name='l2'),  # Integer space for x2 between 0 and 10
-            Integer(0, 12, name='l3'),  # Integer space for x3 between 0 and 10
-            Integer(0, 12, name='l4'),  # Integer space for x4 between 0 and 10
-        ]
-
-
-
-        # Instantiate the stopping callback
-        threshold = 1e-7
-        stop_callback = StopWhenThresholdReached(threshold=threshold)
-
-
-        # Perform Bayesian optimization with Gaussian Process
-        result = gp_minimize(
-            func=cost_function,  # The objective function to minimize
-            dimensions=space,  # The search space
-            n_calls=6,  # Number of evaluations of the objective function
-            n_random_starts=2,
-            callback=[print_score,stop_callback],  # Number of random starting points
-            random_state=42  # Random seed for reproducibility
-        )
-
-        # Results
-        print("Best cost found: ", result.fun)
-        print("Best parameters found: ", result.x)
-
-        res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
-
-        error_cols = ['error_' + str(i) for i in range(1, 6)]
-        new_df = res[error_cols]
-
-        new_df['mean_tot'] = new_df.mean(axis=1)
-
-        ind_best = new_df['mean_tot'].argmin().item()
-
-        curr_ind_tot = df_tot_res.shape[0]
-
-        tot_time = time.time() - time_start
-
-        for col in res.columns:
-            df_tot_res.loc[curr_ind_tot, col] = res.loc[ind_best, col]
-
-        df_tot_res.loc[curr_ind_tot, 'run_time'] = tot_time
-
-        pkl.dump(df_tot_res, open('model_final_'+str(run_num_tot)+'.pkl', 'wb'))
-
 
 
 
