@@ -254,7 +254,6 @@ def cost_function(params):
         return 1e10
 
     print(f"    => Going with ls: {ls}")
-
     ws = ms ** (-1)
     t = MultiErlangMomentMatcher(ms=ms, ls=ls)
     loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=60000, lr=5e-3)
