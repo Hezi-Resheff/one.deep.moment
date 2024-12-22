@@ -237,8 +237,10 @@ class MultiErlangMomentMatcher(object):
 
         return best_so_far
 
-
-path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models'
+if sys.platform == 'linux':
+    path_bayes_models = '/scratch/eliransc/bayes_models'
+else:
+    path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models'
 
 df_tot_res = pd.DataFrame([])
 
