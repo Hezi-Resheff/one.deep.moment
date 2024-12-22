@@ -316,81 +316,81 @@ else:
 
 
 for ind in range(1500):
-    try:
-        rand_ind = np.random.randint(df_dat.shape[0])
 
-        ms = torch.tensor(df_dat.iloc[rand_ind,:5])
+    rand_ind = np.random.randint(df_dat.shape[0])
 
-        time_start = time.time()
+    ms = torch.tensor(df_dat.iloc[rand_ind,:5])
 
-        model_name = np.random.randint(1,1000000)
-        print('!!!!!!!!!!!!! new iteration !!!!!!!!!!!!!')
+    time_start = time.time()
 
-        print(model_name)
+    model_name = np.random.randint(1,1000000)
+    print('!!!!!!!!!!!!! new iteration !!!!!!!!!!!!!')
 
-        df_res = pd.DataFrame([])
-        pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
+    print(model_name)
 
-        dict_PH_per_iteration = {}
+    df_res = pd.DataFrame([])
+    pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
 
-        pkl.dump(dict_PH_per_iteration, open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
+    dict_PH_per_iteration = {}
 
-
-        # Define the search space for each parameter
-        space = [
-            Integer(1, 100, name='l1'),  # Continuous space for x1 between 0 and 10
-            Integer(1, 100, name='l2'),  # Integer space for x2 between 0 and 10
-            Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
-            Integer(1, 100, name='l4'),  # Integer space for x4 between 0 and 10
-        ]
-
-        # Instantiate the stopping callback
-        threshold = 1e-7
-        stop_callback = StopWhenThresholdReached(threshold=threshold)
+    pkl.dump(dict_PH_per_iteration, open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
 
 
-        # Perform Bayesian optimization with Gaussian Process
-        result = gp_minimize(
-            func=cost_function,  # The objective function to minimize
-            dimensions=space,  # The search space
-            n_calls=25,  # Number of evaluations of the objective function
-            n_random_starts=5,
-            callback=[print_score,stop_callback],  # Number of random starting points
-            random_state=42  # Random seed for reproducibility
-        )
+    # Define the search space for each parameter
+    space = [
+        Integer(1, 100, name='l1'),  # Continuous space for x1 between 0 and 10
+        Integer(1, 100, name='l2'),  # Integer space for x2 between 0 and 10
+        Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
+        Integer(1, 100, name='l4'),  # Integer space for x4 between 0 and 10
+    ]
 
-        # Results
-        print("Best cost found: ", result.fun)
-        print("Best parameters found: ", result.x)
+    # Instantiate the stopping callback
+    threshold = 1e-7
+    stop_callback = StopWhenThresholdReached(threshold=threshold)
 
-        res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
 
-        error_cols = ['error_' + str(i) for i in range(1, 6)]
-        new_df = res[error_cols]
+    # Perform Bayesian optimization with Gaussian Process
+    result = gp_minimize(
+        func=cost_function,  # The objective function to minimize
+        dimensions=space,  # The search space
+        n_calls=25,  # Number of evaluations of the objective function
+        n_random_starts=5,
+        callback=[print_score,stop_callback],  # Number of random starting points
+        random_state=42  # Random seed for reproducibility
+    )
 
-        new_df['mean_tot'] = new_df.mean(axis=1)
+    # Results
+    print("Best cost found: ", result.fun)
+    print("Best parameters found: ", result.x)
 
-        ind_best = new_df['mean_tot'].argmin().item()
+    res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
 
-        curr_ind_tot = df_tot_res.shape[0]
+    error_cols = ['error_' + str(i) for i in range(1, 6)]
+    new_df = res[error_cols]
 
-        tot_time = time.time() - time_start
+    new_df['mean_tot'] = new_df.mean(axis=1)
 
-        for col in res.columns:
-            df_tot_res.loc[curr_ind_tot, col] = res.loc[ind_best, col]
+    ind_best = new_df['mean_tot'].argmin().item()
 
-        df_tot_res.loc[curr_ind_tot, 'run_time'] = tot_time
+    curr_ind_tot = df_tot_res.shape[0]
 
-        df_tot_res.loc[curr_ind_tot, 'ph_orig'] = df_dat.iloc[rand_ind, 'ph_orig_size']
+    tot_time = time.time() - time_start
 
-        if sys.platform == 'linux':
+    for col in res.columns:
+        df_tot_res.loc[curr_ind_tot, col] = res.loc[ind_best, col]
 
-            path = '/scratch/eliransc/mom_match_mix_erlang'
-            pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
-        else:
-            path = r'C:\Users\Eshel\workspace\data\mom_matching'
-            pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+    df_tot_res.loc[curr_ind_tot, 'run_time'] = tot_time
 
-    except:
-        print('error in the bayesian optimiization')
+    df_tot_res.loc[curr_ind_tot, 'ph_orig'] = df_dat.iloc[rand_ind, 'ph_orig_size']
+
+    if sys.platform == 'linux':
+
+        path = '/scratch/eliransc/mom_match_mix_erlang'
+        pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+    else:
+        path = r'C:\Users\Eshel\workspace\data\mom_matching'
+        pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+
+    # except:
+    #     print('error in the bayesian optimiization')
 
