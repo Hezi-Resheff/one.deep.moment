@@ -383,7 +383,7 @@ for ind in range(1500):
 
     df_tot_res.loc[curr_ind_tot, 'run_time'] = tot_time
 
-    df_tot_res.loc[curr_ind_tot, 'ph_orig'] = df_dat.iloc[rand_ind, 'ph_orig_size']
+    df_tot_res.loc[curr_ind_tot, 'ph_orig'] = df_dat.loc[rand_ind, 'ph_orig_size']
 
     if sys.platform == 'linux':
 
