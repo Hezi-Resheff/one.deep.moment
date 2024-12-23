@@ -316,10 +316,10 @@ else:
 
 
 
-
+good_list_path = '/home/eliransc/notebooks/good_list.pkl'
 for ind in range(1500):
 
-    good_list = pkl.load(open('/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/old/good_list.pkl', 'rb'))
+    good_list = pkl.load(open(good_list_path, 'rb'))
 
     rand_ind = np.random.choice(good_list).item()
 
@@ -390,8 +390,6 @@ for ind in range(1500):
     df_tot_res.loc[curr_ind_tot, 'orig_ind'] = rand_ind
 
 
-
-
     if sys.platform == 'linux':
 
         path = '/scratch/eliransc/mom_match_mix_erlang'
@@ -401,7 +399,7 @@ for ind in range(1500):
         pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
 
     good_list = good_list[good_list != rand_ind]
-    pkl.dump(good_list, open('/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/old/good_list.pkl', 'wb'))
+    pkl.dump(good_list, open(good_list_path, 'wb'))
 
 
     # except:
