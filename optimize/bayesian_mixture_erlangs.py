@@ -319,7 +319,9 @@ else:
 
 for ind in range(1500):
 
-    rand_ind = np.random.randint(df_dat.shape[0])
+    good_list = pkl.load(open('/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/old/good_list.pkl', 'rb'))
+
+    rand_ind = np.random.choice(good_list).item()
 
     ms = torch.tensor(df_dat.iloc[rand_ind,:5])
 
@@ -385,6 +387,9 @@ for ind in range(1500):
 
     df_tot_res.loc[curr_ind_tot, 'ph_orig'] = df_dat.loc[rand_ind, 'ph_orig_size']
 
+
+
+
     if sys.platform == 'linux':
 
         path = '/scratch/eliransc/mom_match_mix_erlang'
@@ -392,6 +397,10 @@ for ind in range(1500):
     else:
         path = r'C:\Users\Eshel\workspace\data\mom_matching'
         pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+
+    good_list = good_list[good_list != rand_ind]
+    pkl.dump(good_list, open('/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/old/good_list.pkl', 'wb'))
+
 
     # except:
     #     print('error in the bayesian optimiization')
