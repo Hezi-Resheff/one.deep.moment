@@ -397,7 +397,7 @@ for ind in range(1500):
 
     if sys.platform == 'linux':
 
-        path = '/scratch/eliransc/mom_match_mix_erlang'
+        path = '/scratch/eliransc/mom_match_mix_erlang_2'
         pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
     else:
         path = r'C:\Users\Eshel\workspace\data\mom_matching'
