@@ -252,7 +252,7 @@ def cost_function(params):
     # Example: let's assume a simple quadratic cost function for demonstration
     ls = [l for l in params if l > 0]  # size 0 blocks don't count
 
-    if np.array(params).sum() > 300:
+    if np.array(params).sum() > 250:
         return 1e10
 
     print(f"    => Going with ls: {ls}")
@@ -319,16 +319,20 @@ else:
 good_list_path = '/home/eliransc/notebooks/good_list.pkl'
 for ind in range(1500):
 
-    good_list = pkl.load(open(good_list_path, 'rb'))
+    # good_list = pkl.load(open(good_list_path, 'rb'))
 
 
 
-    rand_ind = np.random.choice(good_list).item()
+    # rand_ind = np.random.choice(good_list).item()
 
-    good_list = good_list[good_list != rand_ind]
-    pkl.dump(good_list, open(good_list_path, 'wb'))
-
+    # good_list = good_list[good_list != rand_ind]
+    # pkl.dump(good_list, open(good_list_path, 'wb'))
+    rand_ind = int(10240.0)
     ms = torch.tensor(df_dat.iloc[rand_ind,:5])
+
+    # torch.tensor([1., 1.02777778, 1.08487654, 1.17528292, 1.30586991])
+
+
 
     time_start = time.time()
 
@@ -349,7 +353,7 @@ for ind in range(1500):
     space = [
         Integer(1, 100, name='l1'),  # Continuous space for x1 between 0 and 10
         Integer(1, 100, name='l2'),  # Integer space for x2 between 0 and 10
-        Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
+        # Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
         # Integer(1, 100, name='l4'),  # Integer space for x4 between 0 and 10
     ]
 
