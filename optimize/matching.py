@@ -47,7 +47,7 @@ class MultiErlangMomentMatcher(object):
         moments = compute_moments(a, T, self.k, len(self.ms))
         moments = torch.stack(list(moments))
 
-        error = (moments - ms)
+        error = (moments - self.ms)
         weighted_error = error * ws
         return torch.mean(weighted_error ** 2)
 
@@ -63,16 +63,21 @@ class MultiErlangMomentMatcher(object):
             optimizer.zero_grad()
             loss = self.compute_loss_mix_erlang(lam, alpha, moment_weights)
             loss_list.append(loss.item())
+
+
             if loss < MIN_LOSS_EPSILON:
                 break
+
+            if len(loss_list) > 10000:
+                if loss.item() > 10e4:
+                    print('########## breaking - loss is too big #########')
+                    break
 
             if len(loss_list) > 20000:
                 if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
                     print('########## breaking - stuck in local minumum #########')
                     break
-                elif loss.item() > 10e4:
-                    print('########## breaking - loss is too big #########')
-                    break
+
 
             elif loss < MIN_LOSS_EPSILON*10:
                 lr = 1e-5
@@ -127,7 +132,7 @@ class ErlangMomentMatcher(object):
         moments = compute_moments(a, T, k, len(self.ms))
         moments = torch.stack(list(moments))
 
-        error = (moments - ms)
+        error = (moments - self.ms)
         weighted_error = error * moment_weights
         return torch.mean(weighted_error ** 2)
 
@@ -158,6 +163,32 @@ class ErlangMomentMatcher(object):
             if epoch % 1000 == 0 or epoch == num_epochs - 1:
                 print(f"Epoch {epoch}: loss = {loss}")
 
+        return loss.detach().item(), self.ph_from_lam(lam, k)
+
+    def fit_search_scale(self, num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=100, min_scale=1):
+
+        current_scale = max_scale
+
+        best_so_far = (np.inf, (None, None))
+
+        while current_scale > min_scale:
+            loss_list = []
+            print('##########################################')
+            print('  Starting scale: ', current_scale)
+            print('##########################################')
+            current_loss, (a, T) = self.fit(num_epochs=num_epochs, moment_weights=moment_weights, lr=lr, lambda_scale=current_scale)
+
+            if current_loss < best_so_far[0]:
+                best_so_far = (current_loss, (a, T))
+
+
+            if current_loss < MIN_LOSS_EPSILON:
+                return current_loss, (a, T)
+            else:
+                current_scale /= 2
+
+        return best_so_far
+
 
 
 class MomentMatcher(object):
@@ -187,11 +218,17 @@ class MomentMatcher(object):
             loss = compute_loss(ps, lambdas, alpha, k, self.ms,  moment_weights )
             loss_history.append(loss.item())
 
-            if len(loss_history) > 40000:
+            if len(loss_history) > 10000:
+
+                if loss.item() > 10e7:
+                    print('########## breaking - loss is too big #########')
+                    break
+
+            elif len(loss_history) > 40000:
                 if 100*np.abs((loss_history[-35000]-loss.item())/loss.item()) < 0.01:
                     print('########## breaking - stuck in local minumum #########')
                     break
-                elif loss.item() > 10e10:
+                elif loss.item() > 10e1:
                     print('########## breaking - loss is too big #########')
                     break
 
@@ -216,10 +253,40 @@ class MomentMatcher(object):
                     print(f" => true moments are: {self.ms}")
                     print(100 * (self.ms - moments) / self.ms)
 
-                    if np.isnan(moments).sum() > 0:
-                        return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
+                    if (100 * (self.ms - moments) / self.ms).max().abs().item() < 0.2:
+                        return loss.detach().item(),  make_ph(lambdas, ps, alpha, k)
 
-        return (lambdas, ps, alpha), make_ph(lambdas, ps, alpha, k)
+                    if np.isnan(moments).sum() > 0:
+                        return loss.detach().item(),  make_ph(lambdas, ps, alpha, k)
+
+        return loss.detach().item(),  make_ph(lambdas, ps, alpha, k) # (lambdas, ps, alpha),
+
+    def fit_search_scale(self, k,num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=100, min_scale=1):
+        loss = 1
+        current_scale = max_scale
+
+        best_so_far = (np.inf, (None, None))
+
+        while current_scale > min_scale:
+            loss_list = []
+            print('##########################################')
+            print('  Starting scale: ', current_scale)
+            print('##########################################')
+
+            current_loss, (a, T) = self.fit_ph_distribution(k, num_epochs=num_epochs, moment_weights=moment_weights, lr=lr,
+                                            lambda_scale=current_scale)
+
+            if current_loss < best_so_far[0]:
+                best_so_far = (current_loss, (a, T))
+
+            if current_loss < MIN_LOSS_EPSILON:
+                return current_loss, (a, T)
+            else:
+                current_scale /= 2
+
+        return best_so_far
+
+
 
     def fit_cascade(self, k_min, k_max, num_epochs=1000, moment_weights=None,
                             lambda_scale=100, lr=1e-4, init=None):

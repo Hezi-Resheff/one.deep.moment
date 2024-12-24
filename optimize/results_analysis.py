@@ -78,13 +78,13 @@ if __name__ == "__main__":
         #
         # LB, UB = dict_range[key]
         # fitted_moms =  5 # np.random.randint(5, 21)
-        # a, A, ms = sample_PH(LB, UB, fitted_moms)
+        # a, A, ms = sample_PH(1, 50, fitted_moms)
         orig_size = 100
         n = 5
-        ms = get_feasible_moments(original_size=orig_size, n=n)
+        ms = get_feasible_moments(original_size=50, n=n)
 
         # bad_moms = pkl.load( open(r'C:\Users\Eshel\workspace\data\mom_mathcher_data\bad_moms_5.pkl', 'rb'))
-        a,A, ms  = pkl.load( open(r'C:\Users\Eshel\workspace\data\mom_mathcher_data\erlang_100.pkl', 'rb'))
+        # a,A, ms  = pkl.load( open(r'C:\Users\Eshel\workspace\data\mom_mathcher_data\erlang_100.pkl', 'rb'))
         # ind_bad_moms = 0 # np.random.randint(bad_moms.shape[0])
         #
         # ms = torch.tensor(bad_moms[ind_bad_moms, :-1])
@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
             # ind_example =  169 #np.random.randint(0,bad_np.shape[0])
 
-        for use_size in  np.linspace(100,100, 1).astype(int):
+        for use_size in  np.linspace(10,100, 10).astype(int):
 
             # orig_size = 5 # orig_size_arr[ind_example]
             # This is the size of the target PH
@@ -125,7 +125,7 @@ if __name__ == "__main__":
             ws = ms ** (-1)
 
             matcher = MomentMatcher(ms)
-            (lambdas, ps, alpha), (a, T) = matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
+            loss, (a, T) = matcher.fit_search_scale(use_size, moment_weights=ws, num_epochs=num_epochs, lr=5e-3) #matcher.fit_ph_distribution(use_size, num_epochs=num_epochs, moment_weights=ws)
 
             runtime = time.time() - start
             original_moments = ms.detach().numpy()
@@ -134,6 +134,7 @@ if __name__ == "__main__":
             moment_table["delta"] = moment_table["computed"] - moment_table["target"]
             moment_table["delta-relative"] = 100*moment_table["delta"] / moment_table["target"]
             print(moment_table)
+
             if sys.platform == 'linux':
 
                 path = '/scratch/eliransc/mom_match'

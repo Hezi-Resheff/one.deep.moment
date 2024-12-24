@@ -321,7 +321,12 @@ for ind in range(1500):
 
     good_list = pkl.load(open(good_list_path, 'rb'))
 
+
+
     rand_ind = np.random.choice(good_list).item()
+
+    good_list = good_list[good_list != rand_ind]
+    pkl.dump(good_list, open(good_list_path, 'wb'))
 
     ms = torch.tensor(df_dat.iloc[rand_ind,:5])
 
@@ -398,8 +403,7 @@ for ind in range(1500):
         path = r'C:\Users\Eshel\workspace\data\mom_matching'
         pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
 
-    good_list = good_list[good_list != rand_ind]
-    pkl.dump(good_list, open(good_list_path, 'wb'))
+
 
 
     # except:
