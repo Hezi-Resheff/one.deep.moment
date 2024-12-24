@@ -252,8 +252,8 @@ def cost_function(params):
     # Example: let's assume a simple quadratic cost function for demonstration
     ls = [l for l in params if l > 0]  # size 0 blocks don't count
 
-    if np.array(params).sum() > 300:
-        return 1e10
+    if np.array(params).sum() > 250:
+        return 2.5
 
     print(f"    => Going with ls: {ls}")
     ws = ms ** (-1)
