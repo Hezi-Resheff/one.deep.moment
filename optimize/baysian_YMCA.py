@@ -11,6 +11,7 @@ sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
 import pickle as pkl
 
+num_moms = 10
 
 def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
     # Compute central moments
@@ -170,7 +171,14 @@ if __name__ == "__main__":
 
         rand_ind = np.random.choice(good_list).item()
 
-        ms = torch.tensor(df_dat.iloc[rand_ind, :5])
+        good_list = good_list[good_list != rand_ind]
+        pkl.dump(good_list, open(good_list_path, 'wb'))
+
+        cols = []
+        for mom in range(1, num_moms + 1):
+            cols.append('mom_' + str(mom))
+
+        ms = torch.tensor(df_dat.loc[rand_ind, cols].astype(float))
 
         time_start = time.time()
 
@@ -228,20 +236,24 @@ if __name__ == "__main__":
 
         df_tot_res.loc[curr_ind_tot, 'run_time'] = tot_time
 
-        df_tot_res.loc[curr_ind_tot, 'ph_orig'] = df_dat.loc[rand_ind, 'ph_orig_size']
+        df_tot_res.loc[curr_ind_tot, 'ph_orig'] = df_dat.loc[rand_ind, 'orig_size'].astype('int')
 
         df_tot_res.loc[curr_ind_tot, 'orig_ind'] = rand_ind
 
         if sys.platform == 'linux':
 
-            path = '/scratch/eliransc/mom_match_bayes_classic'
+
+            path = '/scratch/eliransc/mom_match_bayes_classic_'+str(num_moms)
+
+            if not os.path.exists(path):
+                os.mkdir(path)
+
             pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
         else:
             path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic'
             pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
 
-        good_list = good_list[good_list != rand_ind]
-        pkl.dump(good_list, open(good_list_path, 'wb'))
+
 
         # except:
         #     print('error in the bayesian optimiization')
