@@ -157,8 +157,10 @@ if __name__ == "__main__":
 
     if sys.platform == 'linux':
         path_ph = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
-        df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
-        good_list_path = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/optimize/good_list_ymca.pkl'
+        # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
+        # good_list_path = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/optimize/good_list_ymca.pkl'
+        good_list_path = '/home/eliransc/notebooks/good_list_20_moms.pkl'
+        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
     else:
         path_ph = r'C:\Users\Eshel\workspace\data'
         df_dat = pkl.load(open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
