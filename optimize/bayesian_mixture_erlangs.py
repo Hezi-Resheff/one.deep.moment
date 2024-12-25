@@ -316,26 +316,33 @@ def cost_function(params):
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
     # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
-    df_dat = pkl.load(open(os.path.join(path_ph, '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/ph_size_20_moms.pkl'), 'rb'))
+    df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
 else:
     path_ph = r'C:\Users\Eshel\workspace\data'
     df_dat = pkl.load( open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
-    df_dat = pkl.load(open(os.path.join(path_ph, 'df_moms_ph_20_moms.pkl'), 'rb'))
+    df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
 
 
 good_list_path = '/home/eliransc/notebooks/good_list.pkl'
+
 for ind in range(1500):
 
-    good_list = np.arange(df_dat.shape[0]) #pkl.load(open(good_list_path, 'rb'))
+    good_list = np.arange(500) #pkl.load(open(good_list_path, 'rb'))
 
 
 
     rand_ind = np.random.choice(good_list).item()
 
-    # good_list = good_list[good_list != rand_ind]
-    # pkl.dump(good_list, open(good_list_path, 'wb'))
+    good_list = good_list[good_list != rand_ind]
+    pkl.dump(good_list, open(good_list_path, 'wb'))
 
-    ms = torch.tensor(df_dat.iloc[rand_ind,:num_moms])
+    cols = []
+    for mom in range(1, num_moms + 1):
+        cols.append('mom_' + str(mom))
+
+
+
+    ms = torch.tensor(df_dat.loc[rand_ind, cols].astype(float))
 
     time_start = time.time()
 
