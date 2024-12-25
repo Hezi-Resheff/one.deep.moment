@@ -327,7 +327,7 @@ good_list_path = '/home/eliransc/notebooks/good_list.pkl'
 
 for ind in range(1500):
 
-    good_list = np.arange(500) #pkl.load(open(good_list_path, 'rb'))
+    good_list = pkl.load(open(good_list_path, 'rb'))
 
 
 
