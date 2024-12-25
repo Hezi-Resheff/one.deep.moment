@@ -323,7 +323,7 @@ else:
     df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
 
 
-good_list_path = '/home/eliransc/notebooks/good_list.pkl'
+good_list_path = '/home/eliransc/notebooks/good_list_20_moms.pkl'
 
 for ind in range(1500):
 
