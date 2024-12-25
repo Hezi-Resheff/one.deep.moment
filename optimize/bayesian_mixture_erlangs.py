@@ -9,6 +9,7 @@ import os
 import sys
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-7
+num_moms = 10
 sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
 
@@ -252,7 +253,7 @@ def cost_function(params):
     # Example: let's assume a simple quadratic cost function for demonstration
     ls = [l for l in params if l > 0]  # size 0 blocks don't count
 
-    if np.array(params).sum() > 250:
+    if np.array(params).sum() > 270:
         return 2.5
 
     print(f"    => Going with ls: {ls}")
@@ -275,24 +276,30 @@ def cost_function(params):
         open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'rb'))
 
     curr_ind = df_res.shape[0]
-    df_res.loc[curr_ind, 'true_mom_1'] = ms[0].item()
-    df_res.loc[curr_ind, 'true_mom_2'] = ms[1].item()
-    df_res.loc[curr_ind, 'true_mom_3'] = ms[2].item()
-    df_res.loc[curr_ind, 'true_mom_4'] = ms[3].item()
-    df_res.loc[curr_ind, 'true_mom_5'] = ms[4].item()
-
-    df_res.loc[curr_ind, 'est_mom_1'] = moments[0].item()
-    df_res.loc[curr_ind, 'est_mom_2'] = moments[1].item()
-    df_res.loc[curr_ind, 'est_mom_3'] = moments[2].item()
-    df_res.loc[curr_ind, 'est_mom_4'] = moments[3].item()
-    df_res.loc[curr_ind, 'est_mom_5'] = moments[4].item()
-
     errors = errors.abs()
-    df_res.loc[curr_ind, 'error_1'] = errors[0].item()
-    df_res.loc[curr_ind, 'error_2'] = errors[1].item()
-    df_res.loc[curr_ind, 'error_3'] = errors[2].item()
-    df_res.loc[curr_ind, 'error_4'] = errors[3].item()
-    df_res.loc[curr_ind, 'error_5'] = errors[4].item()
+    for mom in range(1,num_moms+1):
+        df_res.loc[curr_ind, 'true_mom_'+str(mom)] = ms[mom-1].item()
+        df_res.loc[curr_ind, 'est_mom_'+str(mom)] = moments[mom-1].item()
+        df_res.loc[curr_ind, 'error_'+str(mom)] = errors[mom-1].item()
+
+    # df_res.loc[curr_ind, 'true_mom_1'] = ms[0].item()
+    # df_res.loc[curr_ind, 'true_mom_2'] = ms[1].item()
+    # df_res.loc[curr_ind, 'true_mom_3'] = ms[2].item()
+    # df_res.loc[curr_ind, 'true_mom_4'] = ms[3].item()
+    # df_res.loc[curr_ind, 'true_mom_5'] = ms[4].item()
+    #
+    # df_res.loc[curr_ind, 'est_mom_1'] = moments[0].item()
+    # df_res.loc[curr_ind, 'est_mom_2'] = moments[1].item()
+    # df_res.loc[curr_ind, 'est_mom_3'] = moments[2].item()
+    # df_res.loc[curr_ind, 'est_mom_4'] = moments[3].item()
+    # df_res.loc[curr_ind, 'est_mom_5'] = moments[4].item()
+    #
+    #
+    # df_res.loc[curr_ind, 'error_1'] = errors[0].item()
+    # df_res.loc[curr_ind, 'error_2'] = errors[1].item()
+    # df_res.loc[curr_ind, 'error_3'] = errors[2].item()
+    # df_res.loc[curr_ind, 'error_4'] = errors[3].item()
+    # df_res.loc[curr_ind, 'error_5'] = errors[4].item()
 
     print(df_res)
 
@@ -308,27 +315,27 @@ def cost_function(params):
 
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
-    df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
+    # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
+    df_dat = pkl.load(open(os.path.join(path_ph, '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/ph_size_20_moms.pkl'), 'rb'))
 else:
     path_ph = r'C:\Users\Eshel\workspace\data'
     df_dat = pkl.load( open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
-
-
+    df_dat = pkl.load(open(os.path.join(path_ph, 'df_moms_ph_20_moms.pkl'), 'rb'))
 
 
 good_list_path = '/home/eliransc/notebooks/good_list.pkl'
 for ind in range(1500):
 
-    good_list = pkl.load(open(good_list_path, 'rb'))
+    good_list = np.arange(df_dat.shape[0]) #pkl.load(open(good_list_path, 'rb'))
 
 
 
     rand_ind = np.random.choice(good_list).item()
 
-    good_list = good_list[good_list != rand_ind]
-    pkl.dump(good_list, open(good_list_path, 'wb'))
+    # good_list = good_list[good_list != rand_ind]
+    # pkl.dump(good_list, open(good_list_path, 'wb'))
 
-    ms = torch.tensor(df_dat.iloc[rand_ind,:5])
+    ms = torch.tensor(df_dat.iloc[rand_ind,:num_moms])
 
     time_start = time.time()
 
@@ -350,7 +357,8 @@ for ind in range(1500):
         Integer(1, 100, name='l1'),  # Continuous space for x1 between 0 and 10
         Integer(1, 100, name='l2'),  # Integer space for x2 between 0 and 10
         Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
-        # Integer(1, 100, name='l4'),  # Integer space for x4 between 0 and 10
+        Integer(1, 100, name='l4'),
+        Integer(1, 100, name='l5'), # Integer space for x4 between 0 and 10
     ]
 
     # Instantiate the stopping callback
@@ -362,8 +370,8 @@ for ind in range(1500):
     result = gp_minimize(
         func=cost_function,  # The objective function to minimize
         dimensions=space,  # The search space
-        n_calls=25,  # Number of evaluations of the objective function
-        n_random_starts=5,
+        n_calls=3,  # Number of evaluations of the objective function
+        n_random_starts=2,
         callback=[print_score,stop_callback],  # Number of random starting points
         random_state=42  # Random seed for reproducibility
     )
@@ -374,7 +382,7 @@ for ind in range(1500):
 
     res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
 
-    error_cols = ['error_' + str(i) for i in range(1, 6)]
+    error_cols = ['error_' + str(i) for i in range(1, num_moms + 1)]
     new_df = res[error_cols]
 
     new_df['mean_tot'] = new_df.mean(axis=1)
@@ -397,10 +405,10 @@ for ind in range(1500):
 
     if sys.platform == 'linux':
 
-        path = '/scratch/eliransc/mom_match_mix_erlang_2'
+        path = '/scratch/eliransc/mom_match_mix_erlang_moms_10'
         pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
     else:
-        path = r'C:\Users\Eshel\workspace\data\mom_matching'
+        path = r'C:\Users\Eshel\workspace\data\mom_matching_moms_10'
         pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
 
 
