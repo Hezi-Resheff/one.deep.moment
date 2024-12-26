@@ -253,13 +253,13 @@ def cost_function(params):
     # Example: let's assume a simple quadratic cost function for demonstration
     ls = [l for l in params if l > 0]  # size 0 blocks don't count
 
-    if np.array(params).sum() > 270:
+    if np.array(params).sum() > 220:
         return 2.5
 
     print(f"    => Going with ls: {ls}")
     ws = ms ** (-1)
     t = MultiErlangMomentMatcher(ms=ms, ls=ls)
-    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=60000, lr=5e-3)
+    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=600, lr=5e-3)
 
     moments = compute_moments(a, T, T.shape[0], len(ms))
     moments = torch.stack(list(moments)).detach().numpy().round(2)
@@ -327,7 +327,7 @@ good_list_path = '/home/eliransc/notebooks/good_list_20_moms.pkl'
 
 for ind in range(1500):
 
-    good_list = pkl.load(open(good_list_path, 'rb'))
+    good_list =  pkl.load(open(good_list_path, 'rb'))
 
 
 
@@ -365,7 +365,7 @@ for ind in range(1500):
         Integer(1, 100, name='l2'),  # Integer space for x2 between 0 and 10
         Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
         Integer(1, 100, name='l4'),
-        Integer(1, 100, name='l5'), # Integer space for x4 between 0 and 10
+        # Integer(1, 100, name='l5'), # Integer space for x4 between 0 and 10
     ]
 
     # Instantiate the stopping callback
@@ -377,8 +377,8 @@ for ind in range(1500):
     result = gp_minimize(
         func=cost_function,  # The objective function to minimize
         dimensions=space,  # The search space
-        n_calls=30,  # Number of evaluations of the objective function
-        n_random_starts=5,
+        n_calls=3,  # Number of evaluations of the objective function
+        n_random_starts=2,
         callback=[print_score,stop_callback],  # Number of random starting points
         random_state=42  # Random seed for reproducibility
     )
