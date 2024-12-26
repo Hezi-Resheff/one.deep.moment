@@ -106,24 +106,6 @@ def cost_function(params):
         df_res.loc[curr_ind, 'error_' + str(mom)] = errors[mom - 1].item()
 
 
-    # df_res.loc[curr_ind, 'true_mom_1'] = ms[0].item()
-    # df_res.loc[curr_ind, 'true_mom_2'] = ms[1].item()
-    # df_res.loc[curr_ind, 'true_mom_3'] = ms[2].item()
-    # df_res.loc[curr_ind, 'true_mom_4'] = ms[3].item()
-    # df_res.loc[curr_ind, 'true_mom_5'] = ms[4].item()
-    #
-    # df_res.loc[curr_ind, 'est_mom_1'] = moments[0].item()
-    # df_res.loc[curr_ind, 'est_mom_2'] = moments[1].item()
-    # df_res.loc[curr_ind, 'est_mom_3'] = moments[2].item()
-    # df_res.loc[curr_ind, 'est_mom_4'] = moments[3].item()
-    # df_res.loc[curr_ind, 'est_mom_5'] = moments[4].item()
-    #
-    # errors = errors.abs()
-    # df_res.loc[curr_ind, 'error_1'] = errors[0].item()
-    # df_res.loc[curr_ind, 'error_2'] = errors[1].item()
-    # df_res.loc[curr_ind, 'error_3'] = errors[2].item()
-    # df_res.loc[curr_ind, 'error_4'] = errors[3].item()
-    # df_res.loc[curr_ind, 'error_5'] = errors[4].item()
 
     print(df_res)
 
