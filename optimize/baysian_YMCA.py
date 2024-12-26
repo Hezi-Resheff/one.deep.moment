@@ -163,7 +163,7 @@ if __name__ == "__main__":
         df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
     else:
         path_ph = r'C:\Users\Eshel\workspace\data'
-        df_dat = pkl.load(open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
+        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
         good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
 
 
@@ -222,7 +222,7 @@ if __name__ == "__main__":
 
         res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
 
-        error_cols = ['error_' + str(i) for i in range(1, 6)]
+        error_cols = ['error_' + str(i) for i in range(1, num_moms+1)]
         new_df = res[error_cols]
 
         new_df['mean_tot'] = new_df.mean(axis=1)
