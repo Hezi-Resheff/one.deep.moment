@@ -259,7 +259,7 @@ def cost_function(params):
     print(f"    => Going with ls: {ls}")
     ws = ms ** (-1)
     t = MultiErlangMomentMatcher(ms=ms, ls=ls)
-    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=600, lr=5e-3)
+    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=60000, lr=5e-3)
 
     moments = compute_moments(a, T, T.shape[0], len(ms))
     moments = torch.stack(list(moments)).detach().numpy().round(2)
@@ -329,8 +329,6 @@ for ind in range(1500):
 
     good_list =  pkl.load(open(good_list_path, 'rb'))
 
-
-
     rand_ind = np.random.choice(good_list).item()
 
     good_list = good_list[good_list != rand_ind]
@@ -377,8 +375,8 @@ for ind in range(1500):
     result = gp_minimize(
         func=cost_function,  # The objective function to minimize
         dimensions=space,  # The search space
-        n_calls=3,  # Number of evaluations of the objective function
-        n_random_starts=2,
+        n_calls=25,  # Number of evaluations of the objective function
+        n_random_starts=5,
         callback=[print_score,stop_callback],  # Number of random starting points
         random_state=42  # Random seed for reproducibility
     )
