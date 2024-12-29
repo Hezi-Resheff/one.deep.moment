@@ -316,14 +316,14 @@ def cost_function(params):
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
     # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
-    df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
+    df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
 else:
     path_ph = r'C:\Users\Eshel\workspace\data'
     df_dat = pkl.load( open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
-    df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
+    df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
 
 
-good_list_path = '/home/eliransc/notebooks/good_list_20_moms.pkl'
+good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
 
 for ind in range(1500):
 
@@ -410,7 +410,9 @@ for ind in range(1500):
 
     if sys.platform == 'linux':
 
-        path = '/scratch/eliransc/mom_match_mix_erlang_moms_10'
+        path = '/scratch/eliransc/cox_mom_match_mix_erlang_moms_'+ str(num_moms)
+        if not os.path.exists(path):
+            os.mkdir(path)
         pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
     else:
         path = r'C:\Users\Eshel\workspace\data\mom_matching_moms_10'

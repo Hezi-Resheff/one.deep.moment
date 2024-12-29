@@ -150,7 +150,9 @@ if __name__ == "__main__":
         # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
         # good_list_path = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/optimize/good_list_ymca.pkl'
         good_list_path = '/home/eliransc/notebooks/good_list_20_moms.pkl'
-        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
+        good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
+        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
+
     else:
         path_ph = r'C:\Users\Eshel\workspace\data'
         df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
@@ -235,7 +237,10 @@ if __name__ == "__main__":
         if sys.platform == 'linux':
 
 
-            path = '/scratch/eliransc/mom_match_bayes_classic_'+str(num_moms)
+            # path = '/scratch/eliransc/125K_iter_mom_match_bayes_classic_'+str(num_moms)
+
+            path = '/scratch/eliransc/cox_mom_match_bayes_classic_moms_' + str(num_moms)
+
 
             if not os.path.exists(path):
                 os.mkdir(path)

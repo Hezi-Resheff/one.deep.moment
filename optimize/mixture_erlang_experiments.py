@@ -304,7 +304,7 @@ def cost_function(params):
 
     return loss
 
-
+num_moms = 10
 
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
@@ -328,7 +328,15 @@ for ind in range(1500):
     # good_list = good_list[good_list != rand_ind]
     # pkl.dump(good_list, open(good_list_path, 'wb'))
     rand_ind = int(10240.0)
-    ms = torch.tensor(df_dat.iloc[rand_ind,:5])
+    ms = torch.tensor([1.00000000e+00, 2.22122681e+00, 7.24041425e+00, 3.08793459e+01,
+       1.62376175e+02, 1.01424150e+03, 7.33469267e+03, 6.02794444e+04,
+       5.57158335e+05, 6.16853550e+06]) #torch.tensor(df_dat.iloc[rand_ind,:5])
+
+    # ([1.00000000e+00, 2.22122681e+00, 7.24041425e+00, 3.08793459e+01,
+    #   1.62376175e+02, 1.01424150e+03, 7.33469267e+03, 6.02794444e+04,
+    #   5.57158335e+05, 6.16853550e+06, 1.77343197e+08, 2.82401171e+10,
+    #   7.17083524e+12, 2.01024320e+15, 6.04565900e+17, 1.93952478e+20,
+    #   6.61115536e+22, 2.38606927e+25, 9.09012452e+27, 3.64529778e+30])
 
     # torch.tensor([1., 1.02777778, 1.08487654, 1.17528292, 1.30586991])
 
@@ -353,8 +361,8 @@ for ind in range(1500):
     space = [
         Integer(1, 100, name='l1'),  # Continuous space for x1 between 0 and 10
         Integer(1, 100, name='l2'),  # Integer space for x2 between 0 and 10
-        # Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
-        # Integer(1, 100, name='l4'),  # Integer space for x4 between 0 and 10
+        Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
+        Integer(1, 100, name='l4'),  # Integer space for x4 between 0 and 10
     ]
 
     # Instantiate the stopping callback
@@ -378,7 +386,7 @@ for ind in range(1500):
 
     res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
 
-    error_cols = ['error_' + str(i) for i in range(1, 6)]
+    error_cols = ['error_' + str(i) for i in range(1, 1+num_moms)]
     new_df = res[error_cols]
 
     new_df['mean_tot'] = new_df.mean(axis=1)
