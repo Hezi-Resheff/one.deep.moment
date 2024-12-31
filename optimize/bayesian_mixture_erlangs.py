@@ -335,9 +335,9 @@ for ind in range(1500):
 
     good_list = pkl.load(open(os.path.join(path_ph, 'good_list_mixture_experiment.pkl'), 'wb'))
 
-    rand_ind = np.random.choice(good_list).item()
+    rand_ind = np.random.choice(good_list[(max_val_ph, num_moms)]).item()
 
-    good_list = good_list[good_list != rand_ind]
+    good_list[(max_val_ph, num_moms)] = good_list[(max_val_ph, num_moms)][good_list != rand_ind]
     pkl.dump(good_list, open(good_list_path, 'wb'))
 
     cols = []
