@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
 import pickle as pkl
 
-num_moms = 10
+# num_moms = 10
 
 def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
     # Compute central moments
@@ -145,13 +145,19 @@ if __name__ == "__main__":
     # else:
     #     bad_np, orig_size_arr = pkl.load( open(r'C:\Users\Eshel\workspace\data\bad_df.pkl', 'rb'))
 
+    num_moms = np.random.choice([5, 10, 20])
+    max_val_ph = np.random.choice([20, 50, 200])
+    model_type = 'general'
     if sys.platform == 'linux':
         path_ph = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
         # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
         # good_list_path = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/optimize/good_list_ymca.pkl'
-        good_list_path = '/home/eliransc/notebooks/good_list_20_moms.pkl'
-        good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
-        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
+        # good_list_path = '/home/eliransc/notebooks/good_list_20_moms.pkl'
+        # good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
+        # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
+
+        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_experiment.pkl'), 'rb'))
+        good_list_path = os.path.join(path_ph, 'good_list_general_experiment.pkl')
 
     else:
         path_ph = r'C:\Users\Eshel\workspace\data'
@@ -193,7 +199,7 @@ if __name__ == "__main__":
 
         # Define the search space for each parameter
         space = [
-            Integer(1, 100, name='use_size'),  # Continuous space for x1 between 0 and 10
+            Integer(1, max_val_ph, name='use_size'),  # Continuous space for x1 between 0 and 10
         ]
 
         # Instantiate the stopping callback
@@ -238,16 +244,14 @@ if __name__ == "__main__":
 
         if sys.platform == 'linux':
 
-
             # path = '/scratch/eliransc/125K_iter_mom_match_bayes_classic_'+str(num_moms)
-
             path = '/scratch/eliransc/cox_mom_match_bayes_classic_moms_' + str(num_moms)
-
+            path = '/scratch/eliransc/experiment_type_num_moms_max_ph'
 
             if not os.path.exists(path):
                 os.mkdir(path)
 
-            pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+            pkl.dump(df_tot_res, open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph)  + '.pkl'), 'wb'))
         else:
             path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic_cox_'+str(num_moms)
             pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
