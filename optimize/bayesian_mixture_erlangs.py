@@ -337,7 +337,7 @@ for ind in range(1500):
 
     rand_ind = np.random.choice(good_list[(max_val_ph, num_moms)]).item()
 
-    good_list[(max_val_ph, num_moms)] = good_list[(max_val_ph, num_moms)][good_list != rand_ind]
+    good_list[(max_val_ph, num_moms)] = good_list[(max_val_ph, num_moms)][good_list[(max_val_ph, num_moms)] != rand_ind]
     pkl.dump(good_list, open(good_list_path, 'wb'))
 
     cols = []
