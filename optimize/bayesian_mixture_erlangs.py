@@ -9,7 +9,8 @@ import os
 import sys
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-7
-num_moms = 10
+
+
 sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
 
@@ -247,7 +248,6 @@ df_tot_res = pd.DataFrame([])
 
 run_num_tot =  np.random.randint(1,10000000)
 
-max_val_ph = 20
 
 def cost_function(params):
     # Example: let's assume a simple quadratic cost function for demonstration
@@ -311,13 +311,17 @@ def cost_function(params):
 
     return loss
 
-
+num_moms = np.random.choice([5,10,20])
+max_val_ph = np.random.choice([20,50,200])
 
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
     # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
-    df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
-    good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
+    # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
+    # good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
+
+    df_dat = pkl.load( open(os.path.join(path_ph, 'ph_size_20_moms_experiment.pkl'), 'rb'))
+
 else:
     path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
     # df_dat = pkl.load( open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
@@ -329,7 +333,7 @@ model_type = 'mix_erlang'
 
 for ind in range(1500):
 
-    good_list =  pkl.load(open(good_list_path, 'rb'))
+    good_list = pkl.load(open(os.path.join(path_ph, 'good_list_mixture_experiment.pkl'), 'wb'))
 
     rand_ind = np.random.choice(good_list).item()
 
@@ -358,7 +362,7 @@ for ind in range(1500):
 
     pkl.dump(dict_PH_per_iteration, open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
 
-    max_per_erlang = 10
+    max_per_erlang = max_val_ph/2
     # Define the search space for each parameter
     space = [
         Integer(1, max_per_erlang, name='l1'),  # Continuous space for x1 between 0 and 10
