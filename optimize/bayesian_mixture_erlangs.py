@@ -247,13 +247,13 @@ df_tot_res = pd.DataFrame([])
 
 run_num_tot =  np.random.randint(1,10000000)
 
-
+max_val_ph = 20
 
 def cost_function(params):
     # Example: let's assume a simple quadratic cost function for demonstration
     ls = [l for l in params if l > 0]  # size 0 blocks don't count
 
-    if np.array(params).sum() > 220:
+    if np.array(params).sum() > max_val_ph:
         return 2.5
 
     print(f"    => Going with ls: {ls}")
@@ -317,13 +317,15 @@ if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
     # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
     df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
+    good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
 else:
-    path_ph = r'C:\Users\Eshel\workspace\data'
-    df_dat = pkl.load( open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
+    path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
+    # df_dat = pkl.load( open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
     df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
+    good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain.pkl')
 
 
-good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
+model_type = 'mix_erlang'
 
 for ind in range(1500):
 
@@ -356,13 +358,13 @@ for ind in range(1500):
 
     pkl.dump(dict_PH_per_iteration, open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
 
-
+    max_per_erlang = 10
     # Define the search space for each parameter
     space = [
-        Integer(1, 100, name='l1'),  # Continuous space for x1 between 0 and 10
-        Integer(1, 100, name='l2'),  # Integer space for x2 between 0 and 10
-        Integer(1, 100, name='l3'),  # Integer space for x3 between 0 and 10
-        Integer(1, 100, name='l4'),
+        Integer(1, max_per_erlang, name='l1'),  # Continuous space for x1 between 0 and 10
+        Integer(1, max_per_erlang, name='l2'),  # Integer space for x2 between 0 and 10
+        Integer(1, max_per_erlang, name='l3'),  # Integer space for x3 between 0 and 10
+        Integer(1, max_per_erlang, name='l4'),
         # Integer(1, 100, name='l5'), # Integer space for x4 between 0 and 10
     ]
 
@@ -410,13 +412,13 @@ for ind in range(1500):
 
     if sys.platform == 'linux':
 
-        path = '/scratch/eliransc/cox_mom_match_mix_erlang_moms_'+ str(num_moms)
+        path = '/scratch/eliransc/experiment_type_num_moms_max_ph'
         if not os.path.exists(path):
             os.mkdir(path)
-        pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+        pkl.dump(df_tot_res, open(os.path.join(path, model_type+'_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph)  + '.pkl'), 'wb'))
     else:
-        path = r'C:\Users\Eshel\workspace\data\mom_matching_moms_10'
-        pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+        path = r'C:\Users\Eshel\workspace\data\mom_matching_moms_10_cox'
+        pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_' + '.pkl'), 'wb'))
 
 
 

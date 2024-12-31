@@ -275,24 +275,29 @@ def cost_function(params):
         open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'rb'))
 
     curr_ind = df_res.shape[0]
-    df_res.loc[curr_ind, 'true_mom_1'] = ms[0].item()
-    df_res.loc[curr_ind, 'true_mom_2'] = ms[1].item()
-    df_res.loc[curr_ind, 'true_mom_3'] = ms[2].item()
-    df_res.loc[curr_ind, 'true_mom_4'] = ms[3].item()
-    df_res.loc[curr_ind, 'true_mom_5'] = ms[4].item()
+    # df_res.loc[curr_ind, 'true_mom_1'] = ms[0].item()
+    # df_res.loc[curr_ind, 'true_mom_2'] = ms[1].item()
+    # df_res.loc[curr_ind, 'true_mom_3'] = ms[2].item()
+    # df_res.loc[curr_ind, 'true_mom_4'] = ms[3].item()
+    # df_res.loc[curr_ind, 'true_mom_5'] = ms[4].item()
+    #
+    # df_res.loc[curr_ind, 'est_mom_1'] = moments[0].item()
+    # df_res.loc[curr_ind, 'est_mom_2'] = moments[1].item()
+    # df_res.loc[curr_ind, 'est_mom_3'] = moments[2].item()
+    # df_res.loc[curr_ind, 'est_mom_4'] = moments[3].item()
+    # df_res.loc[curr_ind, 'est_mom_5'] = moments[4].item()
+    #
+    # errors = errors.abs()
+    # df_res.loc[curr_ind, 'error_1'] = errors[0].item()
+    # df_res.loc[curr_ind, 'error_2'] = errors[1].item()
+    # df_res.loc[curr_ind, 'error_3'] = errors[2].item()
+    # df_res.loc[curr_ind, 'error_4'] = errors[3].item()
+    # df_res.loc[curr_ind, 'error_5'] = errors[4].item()
 
-    df_res.loc[curr_ind, 'est_mom_1'] = moments[0].item()
-    df_res.loc[curr_ind, 'est_mom_2'] = moments[1].item()
-    df_res.loc[curr_ind, 'est_mom_3'] = moments[2].item()
-    df_res.loc[curr_ind, 'est_mom_4'] = moments[3].item()
-    df_res.loc[curr_ind, 'est_mom_5'] = moments[4].item()
-
-    errors = errors.abs()
-    df_res.loc[curr_ind, 'error_1'] = errors[0].item()
-    df_res.loc[curr_ind, 'error_2'] = errors[1].item()
-    df_res.loc[curr_ind, 'error_3'] = errors[2].item()
-    df_res.loc[curr_ind, 'error_4'] = errors[3].item()
-    df_res.loc[curr_ind, 'error_5'] = errors[4].item()
+    for mom in range(1,num_moms+1):
+        df_res.loc[curr_ind, 'true_mom_'+str(mom)] = ms[mom-1].item()
+        df_res.loc[curr_ind, 'est_mom_'+str(mom)] = moments[mom-1].item()
+        df_res.loc[curr_ind, 'error_'+str(mom)] = errors[mom-1].item()
 
     print(df_res)
 
@@ -304,7 +309,7 @@ def cost_function(params):
 
     return loss
 
-num_moms = 10
+num_moms = 20
 
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
@@ -328,9 +333,10 @@ for ind in range(1500):
     # good_list = good_list[good_list != rand_ind]
     # pkl.dump(good_list, open(good_list_path, 'wb'))
     rand_ind = int(10240.0)
-    ms = torch.tensor([1.00000000e+00, 2.22122681e+00, 7.24041425e+00, 3.08793459e+01,
-       1.62376175e+02, 1.01424150e+03, 7.33469267e+03, 6.02794444e+04,
-       5.57158335e+05, 6.16853550e+06]) #torch.tensor(df_dat.iloc[rand_ind,:5])
+    ms = torch.tensor([1.0000e+00, 3.7503e+00, 2.1496e+01, 1.6438e+02, 1.5713e+03, 1.8024e+04,
+        2.4120e+05, 3.6889e+06, 6.3471e+07, 1.2134e+09, 2.5517e+10, 5.8539e+11,
+        1.4549e+13, 3.8939e+14, 1.1166e+16, 3.4156e+17, 1.1101e+19, 3.8199e+20,
+        1.3875e+22, 5.3052e+23]) #torch.tensor(df_dat.iloc[rand_ind,:5])
 
     # ([1.00000000e+00, 2.22122681e+00, 7.24041425e+00, 3.08793459e+01,
     #   1.62376175e+02, 1.01424150e+03, 7.33469267e+03, 6.02794444e+04,

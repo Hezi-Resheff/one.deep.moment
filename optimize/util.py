@@ -51,7 +51,7 @@ def get_feasible_moments(original_size, n):
     T = T * m1
     ms = compute_moments(a, T, k, n)
     momenets = torch.stack(list(ms))
-    return momenets
+    return a, T , momenets
 
 
 def embedd_next_ph(a, T, k):
@@ -153,23 +153,23 @@ def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
     return skewness, kurtosis
 
 
-def get_feasible_moments(original_size, n):
-    """ Compute feasible k-moments by sampling from high order PH and scaling """
-    k = original_size
-    ps = torch.randn(k, k)
-    lambdas = torch.rand(k) * 100
-    alpha = torch.randn(k)
-    a, T = make_ph(lambdas, ps, alpha, k)
-
-    # Compute mean
-    ms = compute_moments(a, T, k, 1)
-    m1 = torch.stack(list(ms)).item()
-
-    # Scale
-    T = T * m1
-    ms = compute_moments(a, T, k, n)
-    momenets = torch.stack(list(ms))
-    return momenets
+# def get_feasible_moments(original_size, n):
+#     """ Compute feasible k-moments by sampling from high order PH and scaling """
+#     k = original_size
+#     ps = torch.randn(k, k)
+#     lambdas = torch.rand(k) * 100
+#     alpha = torch.randn(k)
+#     a, T = make_ph(lambdas, ps, alpha, k)
+#
+#     # Compute mean
+#     ms = compute_moments(a, T, k, 1)
+#     m1 = torch.stack(list(ms)).item()
+#
+#     # Scale
+#     T = T * m1
+#     ms = compute_moments(a, T, k, n)
+#     momenets = torch.stack(list(ms))
+#     return momenets
 
 def sample_PH(LB, UB, fitted_moms = 5):
     flag = True

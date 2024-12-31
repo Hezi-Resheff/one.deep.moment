@@ -155,8 +155,10 @@ if __name__ == "__main__":
 
     else:
         path_ph = r'C:\Users\Eshel\workspace\data'
+        path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
         df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
-        good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
+        # good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
+        good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain_YMCA.pkl')
 
 
     for ind in range(1500):
@@ -247,7 +249,7 @@ if __name__ == "__main__":
 
             pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
         else:
-            path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic'
+            path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic_cox_'+str(num_moms)
             pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
 
 
