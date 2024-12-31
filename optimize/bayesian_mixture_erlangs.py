@@ -334,7 +334,7 @@ model_type = 'mix_erlang'
 
 for ind in range(1500):
 
-    good_list = pkl.load(open(good_list_path, 'wb'))
+    good_list = pkl.load(open(good_list_path, 'rb'))
 
     rand_ind = np.random.choice(good_list[(max_val_ph, num_moms)]).item()
 
