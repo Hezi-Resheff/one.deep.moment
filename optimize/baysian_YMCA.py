@@ -171,7 +171,7 @@ if __name__ == "__main__":
 
         good_list = pkl.load(open(good_list_path, 'rb'))
 
-        rand_ind = np.random.choice(good_list).item()
+        rand_ind = np.random.choice(good_list[(max_val_ph, num_moms)]).item()
 
         good_list = good_list[good_list != rand_ind]
         pkl.dump(good_list, open(good_list_path, 'wb'))
