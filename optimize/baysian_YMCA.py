@@ -245,6 +245,11 @@ if __name__ == "__main__":
 
         df_tot_res.loc[curr_ind_tot, 'orig_ind'] = rand_ind
 
+        df_tot_res.loc[curr_ind_tot, 'num_moms'] = num_moms
+
+        df_tot_res.loc[curr_ind_tot, 'PH_fit_size'] = max_val_ph
+
+
         if sys.platform == 'linux':
 
             # path = '/scratch/eliransc/125K_iter_mom_match_bayes_classic_'+str(num_moms)
