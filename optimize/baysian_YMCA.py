@@ -74,7 +74,7 @@ run_num_tot =  np.random.randint(1,10000000)
 
 def cost_function(params):
 
-    num_epochs = 250000
+    num_epochs = 225000
 
 
 
@@ -82,41 +82,44 @@ def cost_function(params):
     ws = ms ** (-1)
     matcher = MomentMatcher(ms)
     loss, (a, T) = matcher.fit_search_scale(params[0].item(), moment_weights=ws, num_epochs=num_epochs, lr=5e-3)
+    try:
+        moments = compute_moments(a, T, T.shape[0], len(ms))
+        moments = torch.stack(list(moments)).detach().numpy().round(2)
 
-    moments = compute_moments(a, T, T.shape[0], len(ms))
-    moments = torch.stack(list(moments)).detach().numpy().round(2)
+        print(f" => moments are: {moments}")
+        print(f" => true moments are: {ms}")
 
-    print(f" => moments are: {moments}")
-    print(f" => true moments are: {ms}")
+        errors = 100 * (ms - moments) / ms
 
-    errors = 100 * (ms - moments) / ms
+        print(errors)
+        df_res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
 
-    print(errors)
-    df_res = pkl.load(open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
+        dict_PH_per_iteration = pkl.load(
+            open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'rb'))
 
-    dict_PH_per_iteration = pkl.load(
-        open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'rb'))
+        curr_ind = df_res.shape[0]
 
-    curr_ind = df_res.shape[0]
-
-    errors = errors.abs()
-    for mom in range(1, num_moms + 1):
-        df_res.loc[curr_ind, 'true_mom_' + str(mom)] = ms[mom - 1].item()
-        df_res.loc[curr_ind, 'est_mom_' + str(mom)] = moments[mom - 1].item()
-        df_res.loc[curr_ind, 'error_' + str(mom)] = errors[mom - 1].item()
+        errors = errors.abs()
+        for mom in range(1, num_moms + 1):
+            df_res.loc[curr_ind, 'true_mom_' + str(mom)] = ms[mom - 1].item()
+            df_res.loc[curr_ind, 'est_mom_' + str(mom)] = moments[mom - 1].item()
+            df_res.loc[curr_ind, 'error_' + str(mom)] = errors[mom - 1].item()
 
 
 
-    print(df_res)
+        print(df_res)
 
-    dict_PH_per_iteration[curr_ind] = (a, T)
+        dict_PH_per_iteration[curr_ind] = (a, T)
 
-    pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
-    pkl.dump(dict_PH_per_iteration,
-             open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
+        pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
+        pkl.dump(dict_PH_per_iteration,
+                 open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
 
-    return loss
+        return loss
 
+    except:
+
+        return 500
 
 def print_score(res):
     iteration = len(res.func_vals)

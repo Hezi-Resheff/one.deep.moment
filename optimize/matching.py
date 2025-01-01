@@ -218,6 +218,10 @@ class MomentMatcher(object):
             loss = compute_loss(ps, lambdas, alpha, k, self.ms,  moment_weights )
             loss_history.append(loss.item())
 
+            if np.isinf(loss.item()):
+                print('########## breaking - loss is inf #########')
+                break
+
             if len(loss_history) > 10000:
 
                 if loss.item() > 10e7:
