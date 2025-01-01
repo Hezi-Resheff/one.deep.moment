@@ -357,7 +357,7 @@ for ind in range(1500):
     print(model_name)
 
     df_res = pd.DataFrame([])
-    pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'rb'))
+    pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
 
     dict_PH_per_iteration = {}
 
