@@ -321,7 +321,10 @@ if sys.platform == 'linux':
     # good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
 
     df_dat = pkl.load( open(os.path.join(path_ph, 'ph_size_20_moms_experiment.pkl'), 'rb'))
+    df_dat = pkl.load(open(os.path.join(path_ph, 'PH_set_new.pkl'), 'rb'))
+
     good_list_path  = os.path.join(path_ph, 'good_list_mixture_experiment.pkl')
+    good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new.pkl')
 
 else:
     path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
