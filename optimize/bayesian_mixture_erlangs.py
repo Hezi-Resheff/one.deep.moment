@@ -324,7 +324,7 @@ if sys.platform == 'linux':
     df_dat = pkl.load(open(os.path.join(path_ph, 'PH_set_new.pkl'), 'rb'))
 
     good_list_path  = os.path.join(path_ph, 'good_list_mixture_experiment.pkl')
-    good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new.pkl')
+    good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_mixture.pkl')
 
 else:
     path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
