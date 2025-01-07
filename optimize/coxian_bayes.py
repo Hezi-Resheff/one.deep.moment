@@ -10,6 +10,7 @@ import os
 sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
 import pickle as pkl
+from skopt import gp_minimize
 from skopt.space import Integer, Real, Categorical
 
 # num_moms = 10
