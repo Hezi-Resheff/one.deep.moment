@@ -257,9 +257,16 @@ def cost_function(params):
         return 2.5
 
     print(f"    => Going with ls: {ls}")
+
+
+
     ws = ms ** (-1)
-    t = MultiErlangMomentMatcher(ms=ms, ls=ls)
-    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=60000, lr=5e-3)
+
+    matcher = CoxianMatcher(ms=ms)
+
+    num_epochs = 250000
+
+    loss, (a, T) = matcher.fit_search_scale(ls, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 
     moments = compute_moments(a, T, T.shape[0], len(ms))
     moments = torch.stack(list(moments)).detach().numpy().round(2)
@@ -305,9 +312,9 @@ def cost_function(params):
 
     dict_PH_per_iteration[curr_ind] = (a, T)
 
-    pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
-    pkl.dump(dict_PH_per_iteration,
-             open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
+    # pkl.dump(df_res, open(os.path.join(path_bayes_models, str(model_name) + '.pkl'), 'wb'))
+    # pkl.dump(dict_PH_per_iteration,
+    #          open(os.path.join(path_bayes_models, 'PH_dict_' + str(model_name) + '.pkl'), 'wb'))
 
     return loss
 
