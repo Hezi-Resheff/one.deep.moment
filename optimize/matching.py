@@ -427,7 +427,7 @@ if __name__ == "__main__":
     moments = torch.tensor([1., 1.938327, 5.527979, 23.918602, 268.282498])
 
     print(moments)
-    num_epochs = 50000
+    num_epochs = 150000
     ws = moments ** (-1)
     matcher = CoxianMatcher(ms=moments)
 

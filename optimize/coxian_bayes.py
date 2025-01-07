@@ -10,6 +10,7 @@ import os
 sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
 import pickle as pkl
+from skopt.space import Integer, Real, Categorical
 
 # num_moms = 10
 
@@ -200,7 +201,7 @@ if __name__ == "__main__":
 
         # Define the search space for each parameter
         space = [
-            Integer(1, max_val_ph, name='use_size'),  # Continuous space for x1 between 0 and 10
+            Integer(5, max_val_ph, name='use_size'),  # Continuous space for x1 between 0 and 10
         ]
 
         # Instantiate the stopping callback
