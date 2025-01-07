@@ -86,7 +86,7 @@ class CoxianMatcher(object):
 
         return loss.detach().item(), self.get_ph_from_coxiam(lam, ps, k)
 
-    def fit_search_scale(self, k, num_epochs, moment_weights, lr=1e-4, max_scale = 100, min_scale = 1):
+    def fit_search_scale(self, k, num_epochs, moment_weights, lr=1e-4, max_scale = 25, min_scale = 1):
 
         loss = 1
         current_scale = max_scale
@@ -424,7 +424,8 @@ if __name__ == "__main__":
 
 
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    moments = torch.tensor([1., 1.69, 3.73, 9.9, 31.34])
+    moments = torch.tensor([1., 1.938327, 5.527979, 23.918602, 268.282498])
+
     print(moments)
     num_epochs = 50000
     ws = moments ** (-1)
