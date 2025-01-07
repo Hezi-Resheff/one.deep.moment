@@ -1,7 +1,7 @@
 import torch
-from pkg_resources import require
-from skopt import gp_minimize
-from skopt.space import Real, Integer
+# from pkg_resources import require
+# from skopt import gp_minimize
+# from skopt.space import Real, Integer
 from util import *
 import numpy as np
 import pickle as pkl
@@ -9,8 +9,9 @@ import os
 import sys
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-7
-sys.path.append(os.path.abspath(".."))
-from utils_sample_ph import *
+# sys.path.append(os.path.abspath(".."))
+# from utils_sample_ph import *
+
 
 def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
     if moment_weights is None:
@@ -26,12 +27,60 @@ def compute_loss(ps, lambdas, alpha, k, ms, moment_weights=None):
 
     return ms_weighted_erorr
 
+
+class CoxianMatcher(object):
+    def __init__(self, ms):
+        self.ms = ms
+
+    @staticmethod
+    def get_ph_from_coxiam(lams, ps, k):
+        lams = lams ** 2
+        ps = torch.nn.functional.softmax(ps, 0)
+        alpha = torch.eye(k)[0]
+
+        d2 = (lams * ps)[:-1]
+        T = torch.diag(lams) + torch.diag(d2, 1)
+        return alpha, T
+
+    def compute_loss_cox(self, lams, ps, ws):
+        k = lams.shape[0]
+        a, T = self.get_ph_from_coxiam(lams, ps, k)
+        moments = compute_moments(a, T, k, len(self.ms))
+        moments = torch.stack(list(moments))
+
+        error = (moments - self.ms)
+        weighted_error = error * ws
+        return torch.mean(weighted_error ** 2)
+
+    def fit(self, k, num_epochs=1000, moment_weights=None, lambda_scale=1, lr=1e-4):
+        # init
+        lam = (torch.randn(k) * lambda_scale).detach().requires_grad_(True)
+        ps = torch.rand(k, requires_grad=True)
+
+        # fit
+        optimizer = torch.optim.Adam([lam, ps], lr=lr)
+
+        for epoch in range(num_epochs):
+            optimizer.zero_grad()
+            loss = self.compute_loss_cox(lam, ps, ws=moment_weights)
+
+            if loss < MIN_LOSS_EPSILON:
+                break
+
+            loss.backward()
+            optimizer.step()
+
+            if epoch % 1000 == 0 or epoch == num_epochs - 1:
+                print(f"Epoch {epoch}: loss = {loss}")
+
+        return loss.detach().item(), self.get_ph_from_coxiam(lam, ps, k)
+
+
 class MultiErlangMomentMatcher(object):
     def __init__(self, ms, ls):
         self.ms = ms
         self.ls = ls
         self.k = sum(ls)
-
 
     def get_ph_mix_erlang(self, lam, alpha):
         lams = lam ** 2
@@ -64,7 +113,6 @@ class MultiErlangMomentMatcher(object):
             loss = self.compute_loss_mix_erlang(lam, alpha, moment_weights)
             loss_list.append(loss.item())
 
-
             if loss < MIN_LOSS_EPSILON:
                 break
 
@@ -77,7 +125,6 @@ class MultiErlangMomentMatcher(object):
                 if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
                     print('########## breaking - stuck in local minumum #########')
                     break
-
 
             elif loss < MIN_LOSS_EPSILON*10:
                 lr = 1e-5
@@ -113,7 +160,6 @@ class MultiErlangMomentMatcher(object):
 
             if current_loss < best_so_far[0]:
                 best_so_far = (current_loss, (a, T))
-
 
             if current_loss < MIN_LOSS_EPSILON:
                 return current_loss, (a, T)
@@ -181,14 +227,12 @@ class ErlangMomentMatcher(object):
             if current_loss < best_so_far[0]:
                 best_so_far = (current_loss, (a, T))
 
-
             if current_loss < MIN_LOSS_EPSILON:
                 return current_loss, (a, T)
             else:
                 current_scale /= 2
 
         return best_so_far
-
 
 
 class MomentMatcher(object):
@@ -290,8 +334,6 @@ class MomentMatcher(object):
 
         return best_so_far
 
-
-
     def fit_cascade(self, k_min, k_max, num_epochs=1000, moment_weights=None,
                             lambda_scale=100, lr=1e-4, init=None):
 
@@ -347,4 +389,12 @@ if __name__ == "__main__":
         pkl.dump((errors_mom, np.array(ms)), open(os.path.join(path, str(num_run) + '_out.pkl'), 'wb'))
 
 
+    a, T, momenets = get_feasible_moments(original_size=20, n=5)
+    print(momenets)
 
+    ws = momenets ** (-1)
+    matcher = CoxianMatcher(ms=momenets)
+    _, (a, T) = matcher.fit(k=50, num_epochs=100000, moment_weights=ws, lambda_scale=3, lr=1e-3)
+
+    moment_table = moment_analytics(momenets, compute_moments(a, T, 20, 5))
+    print(moment_table)
