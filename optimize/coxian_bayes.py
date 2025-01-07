@@ -78,7 +78,7 @@ def cost_function(params):
     print(f"    => Going with ls: {params}")
 
 
-    num_epochs = 250000
+    num_epochs = 200000
     ws = ms ** (-1)
     matcher = CoxianMatcher(ms=ms)
 
