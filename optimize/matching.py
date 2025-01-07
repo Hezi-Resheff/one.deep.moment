@@ -39,7 +39,7 @@ class CoxianMatcher(object):
         alpha = torch.eye(k)[0]
 
         d2 = (lams * ps)[:-1]
-        T = torch.diag(lams) + torch.diag(d2, 1)
+        T = torch.diag(-lams) + torch.diag(d2, 1)
         return alpha, T
 
     def compute_loss_cox(self, lams, ps, ws):
@@ -389,12 +389,13 @@ if __name__ == "__main__":
         pkl.dump((errors_mom, np.array(ms)), open(os.path.join(path, str(num_run) + '_out.pkl'), 'wb'))
 
 
-    a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    print(momenets)
+    # a, T, momenets = get_feasible_moments(original_size=20, n=5)
+    moments = torch.tensor([1., 1.69, 3.73, 9.9, 31.34])
+    print(moments)
 
-    ws = momenets ** (-1)
-    matcher = CoxianMatcher(ms=momenets)
-    _, (a, T) = matcher.fit(k=50, num_epochs=100000, moment_weights=ws, lambda_scale=3, lr=1e-3)
+    ws = moments ** (-1)
+    matcher = CoxianMatcher(ms=moments)
+    _, (a, T) = matcher.fit(k=100, num_epochs=1000000, moment_weights=ws, lambda_scale=.3, lr=1e-3)
 
-    moment_table = moment_analytics(momenets, compute_moments(a, T, 20, 5))
+    moment_table = moment_analytics(moments, compute_moments(a, T, 100, 5))
     print(moment_table)
