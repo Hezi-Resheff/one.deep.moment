@@ -336,7 +336,7 @@ for ind in range(1500):
     df_dat = df_dict_comb[list_keys[curr_key_ind]]
     good_list = pkl.load(open(good_list_path, 'rb'))
 
-    rand_ind = np.random.choice(good_list[(max_val_ph, num_moms)]).item()
+    rand_ind = np.random.choice(good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])]).item()
 
     good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] = good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])][good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] != rand_ind]
     pkl.dump(good_list, open(good_list_path, 'wb'))
