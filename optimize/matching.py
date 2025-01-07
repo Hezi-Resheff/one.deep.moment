@@ -52,20 +52,31 @@ class CoxianMatcher(object):
         weighted_error = error * ws
         return torch.mean(weighted_error ** 2)
 
-    def fit(self, k, num_epochs=1000, moment_weights=None, lambda_scale=1, lr=1e-4):
+    def fit(self, k, num_epochs, moment_weights, lambda_scale, lr=1e-4):
         # init
         lam = (torch.randn(k) * lambda_scale).detach().requires_grad_(True)
         ps = torch.rand(k, requires_grad=True)
 
         # fit
         optimizer = torch.optim.Adam([lam, ps], lr=lr)
-
+        loss_list = []
         for epoch in range(num_epochs):
             optimizer.zero_grad()
             loss = self.compute_loss_cox(lam, ps, ws=moment_weights)
-
+            loss_list.append(loss.item())
             if loss < MIN_LOSS_EPSILON:
                 break
+
+            if len(loss_list) > 10000:
+                if loss.item() > 10e4:
+                    print('########## breaking - loss is too big #########')
+                    break
+
+            if len(loss_list) > 20000:
+                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
+                    print('########## breaking - stuck in local minumum #########')
+                    break
+
 
             loss.backward()
             optimizer.step()
@@ -74,6 +85,31 @@ class CoxianMatcher(object):
                 print(f"Epoch {epoch}: loss = {loss}")
 
         return loss.detach().item(), self.get_ph_from_coxiam(lam, ps, k)
+
+    def fit_search_scale(self, k, num_epochs, moment_weights, lr=1e-4, max_scale = 100, min_scale = 1):
+
+        loss = 1
+        current_scale = max_scale
+
+        best_so_far = (np.inf, (None, None))
+
+        while current_scale > min_scale:
+            loss_list = []
+            print('##########################################')
+            print('  Starting scale: ', current_scale)
+            print('##########################################')
+
+            current_loss, (a, T) = self.fit(k, num_epochs, moment_weights, current_scale)
+
+            if current_loss < best_so_far[0]:
+                best_so_far = (current_loss, (a, T))
+
+            if current_loss < MIN_LOSS_EPSILON:
+                return current_loss, (a, T)
+            else:
+                current_scale /= 2
+
+        return best_so_far
 
 
 class MultiErlangMomentMatcher(object):
@@ -392,10 +428,11 @@ if __name__ == "__main__":
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
     moments = torch.tensor([1., 1.69, 3.73, 9.9, 31.34])
     print(moments)
-
+    num_epochs = 50000
     ws = moments ** (-1)
     matcher = CoxianMatcher(ms=moments)
-    _, (a, T) = matcher.fit(k=100, num_epochs=1000000, moment_weights=ws, lambda_scale=.3, lr=1e-3)
+
+    _, (a, T) = matcher.fit_search_scale(100, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 
     moment_table = moment_analytics(moments, compute_moments(a, T, 100, 5))
     print(moment_table)

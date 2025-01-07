@@ -316,15 +316,8 @@ max_val_ph = np.random.choice([20,50,200])
 
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
-    # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
-    # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
-    # good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
-
-    df_dat = pkl.load( open(os.path.join(path_ph, 'ph_size_20_moms_experiment.pkl'), 'rb'))
-    df_dat = pkl.load(open(os.path.join(path_ph, 'PH_set_new.pkl'), 'rb'))
-
-    good_list_path  = os.path.join(path_ph, 'good_list_mixture_experiment.pkl')
-    good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_mixture.pkl')
+    df_dict_comb = pkl.load(open(os.path.join(path_ph, 'df_dict_comb.pkl'), 'rb'))
+    good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_mixture_test.pkl')
 
 else:
     path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
@@ -337,18 +330,20 @@ model_type = 'mix_erlang'
 
 for ind in range(1500):
 
+    list_keys = list(df_dict_comb.keys())
+
+    curr_key_ind = np.random.randint(len(list_keys))
+    df_dat = df_dict_comb[list_keys[curr_key_ind]]
     good_list = pkl.load(open(good_list_path, 'rb'))
 
     rand_ind = np.random.choice(good_list[(max_val_ph, num_moms)]).item()
 
-    good_list[(max_val_ph, num_moms)] = good_list[(max_val_ph, num_moms)][good_list[(max_val_ph, num_moms)] != rand_ind]
+    good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] = good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])][good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] != rand_ind]
     pkl.dump(good_list, open(good_list_path, 'wb'))
 
     cols = []
     for mom in range(1, num_moms + 1):
         cols.append('mom_' + str(mom))
-
-
 
     ms = torch.tensor(df_dat.loc[rand_ind, cols].astype(float))
 
@@ -421,10 +416,12 @@ for ind in range(1500):
 
     df_tot_res.loc[curr_ind_tot, 'PH_fit_size'] = max_val_ph
 
+    df_tot_res.loc[curr_ind_tot, 'key_ind'] = curr_key_ind
+
 
     if sys.platform == 'linux':
 
-        path = '/scratch/eliransc/experiment_type_num_moms_max_ph'
+        path = '/scratch/eliransc/experiment_type_num_moms_max_ph_with_cox'
         if not os.path.exists(path):
             os.mkdir(path)
         pkl.dump(df_tot_res, open(os.path.join(path, model_type+'_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph)  + '.pkl'), 'wb'))
