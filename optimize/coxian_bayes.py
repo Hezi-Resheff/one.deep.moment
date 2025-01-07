@@ -74,14 +74,17 @@ run_num_tot =  np.random.randint(1,10000000)
 
 def cost_function(params):
 
-    num_epochs = 225000
-
-
 
     print(f"    => Going with ls: {params}")
+
+
+    num_epochs = 50000
     ws = ms ** (-1)
-    matcher = MomentMatcher(ms)
-    loss, (a, T) = matcher.fit_search_scale(params[0].item(), moment_weights=ws, num_epochs=num_epochs, lr=5e-3)
+    matcher = CoxianMatcher(ms=ms)
+
+    loss, (a, T) = matcher.fit_search_scale(params[0], num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
+
+
     try:
         moments = compute_moments(a, T, T.shape[0], len(ms))
         moments = torch.stack(list(moments)).detach().numpy().round(2)
@@ -104,7 +107,6 @@ def cost_function(params):
             df_res.loc[curr_ind, 'true_mom_' + str(mom)] = ms[mom - 1].item()
             df_res.loc[curr_ind, 'est_mom_' + str(mom)] = moments[mom - 1].item()
             df_res.loc[curr_ind, 'error_' + str(mom)] = errors[mom - 1].item()
-
 
 
         print(df_res)

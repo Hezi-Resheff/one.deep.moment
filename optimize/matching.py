@@ -90,9 +90,7 @@ class CoxianMatcher(object):
 
         loss = 1
         current_scale = max_scale
-
         best_so_far = (np.inf, (None, None))
-
         while current_scale > min_scale:
             loss_list = []
             print('##########################################')
