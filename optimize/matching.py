@@ -64,6 +64,12 @@ class CoxianMatcher(object):
             optimizer.zero_grad()
             loss = self.compute_loss_cox(lam, ps, ws=moment_weights)
             loss_list.append(loss.item())
+
+            if np.isnan(loss.item()):
+                print('########## breaking - nan #########')
+
+                break
+
             if loss < MIN_LOSS_EPSILON:
                 break
 
@@ -73,7 +79,7 @@ class CoxianMatcher(object):
                     break
 
             if len(loss_list) > 20000:
-                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
+                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.1:
                     print('########## breaking - stuck in local minumum #########')
                     break
 
@@ -84,9 +90,11 @@ class CoxianMatcher(object):
             if epoch % 1000 == 0 or epoch == num_epochs - 1:
                 print(f"Epoch {epoch}: loss = {loss}")
 
+
+
         return loss.detach().item(), self.get_ph_from_coxiam(lam, ps, k)
 
-    def fit_search_scale(self, k, num_epochs, moment_weights, lr=1e-4, max_scale = 25, min_scale = 1):
+    def fit_search_scale(self, k, num_epochs, moment_weights, lr=1e-4, max_scale = 50, min_scale = 1):
 
         loss = 1
         current_scale = max_scale
@@ -107,7 +115,12 @@ class CoxianMatcher(object):
             else:
                 current_scale /= 2
 
-        return best_so_far
+        if np.isnan(best_so_far[0]):
+            return 5000
+        else:
+            return best_so_far
+
+        # return best_so_far
 
 
 class MultiErlangMomentMatcher(object):
@@ -200,7 +213,10 @@ class MultiErlangMomentMatcher(object):
             else:
                 current_scale /= 2
 
-        return best_so_far
+        if np.isnan(best_so_far[0]):
+            return 5000
+        else:
+            return best_so_far
 
 
 class ErlangMomentMatcher(object):
@@ -366,7 +382,10 @@ class MomentMatcher(object):
             else:
                 current_scale /= 2
 
-        return best_so_far
+        if np.isnan(best_so_far[0]):
+            return 5000
+        else:
+            return best_so_far
 
     def fit_cascade(self, k_min, k_max, num_epochs=1000, moment_weights=None,
                             lambda_scale=100, lr=1e-4, init=None):
@@ -437,5 +456,5 @@ if __name__ == "__main__":
 
     _, (a, T) = matcher.fit_search_scale(100, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 
-    moment_table = moment_analytics(moments, compute_moments(a, T, 100, 5))
+    moment_table = moment_analytics(moments, compute_moments(a, T, 100, 20))
     print(moment_table)

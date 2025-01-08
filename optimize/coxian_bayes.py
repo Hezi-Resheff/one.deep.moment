@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     num_moms = np.random.choice([5, 10, 20])
     max_val_ph = np.random.choice([20, 50, 200])
-    model_type = 'general'
+    model_type = 'cox'
     if sys.platform == 'linux':
         path_ph = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
         df_dict_comb = pkl.load(open(os.path.join(path_ph, 'df_dict_comb.pkl'), 'rb'))
