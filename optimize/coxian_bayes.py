@@ -80,7 +80,7 @@ def cost_function(params):
     print(f"    => Going with ls: {params}")
 
 
-    num_epochs = 200000
+    num_epochs = 150000
     ws = ms ** (-1)
     matcher = CoxianMatcher(ms=ms)
 
@@ -148,8 +148,8 @@ class StopWhenThresholdReached:
 if __name__ == "__main__":
 
 
-    num_moms = np.random.choice([5, 10, 20])
-    max_val_ph = np.random.choice([20, 50, 200])
+    num_moms = np.random.choice([ 20])
+    max_val_ph = np.random.choice([200])
     model_type = 'cox'
     if sys.platform == 'linux':
         path_ph = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'

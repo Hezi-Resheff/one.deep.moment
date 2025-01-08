@@ -443,18 +443,18 @@ if __name__ == "__main__":
 
 
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    moments = torch.tensor([1.00000000e+00, 1.95854814e+00, 7.02840769e+00, 4.73498867e+01,
-       5.19538417e+02, 7.68374668e+03, 1.37713115e+05, 2.85669690e+06,
-       6.73352818e+07, 1.80824363e+09, 5.76934243e+10, 2.45129380e+12,
-       1.58607743e+14, 1.51846593e+16, 1.83746365e+18, 2.51337311e+20,
-       3.71010801e+22, 5.81146025e+24, 9.59341730e+26, 1.66289153e+29])
+    moments = torch.tensor([1.00000000e+00, 4.07605304e+00, 3.01224619e+01, 3.03895838e+02,
+       3.81433744e+03, 5.69857281e+04, 9.85788989e+05, 1.93629874e+07,
+       4.25499627e+08, 1.03396088e+10, 2.75229621e+11, 7.96328946e+12,
+       2.48803205e+14, 8.34765775e+15, 2.99315864e+17, 1.14216888e+19,
+       4.62130449e+20, 1.97611567e+22, 8.90442423e+23, 4.21702620e+25])
 
     print(moments)
     num_epochs = 150000
     ws = moments ** (-1)
     matcher = CoxianMatcher(ms=moments)
 
-    _, (a, T) = matcher.fit_search_scale(100, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
+    _, (a, T) = matcher.fit_search_scale(150, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 
     moment_table = moment_analytics(moments, compute_moments(a, T, 100, 20))
     print(moment_table)
