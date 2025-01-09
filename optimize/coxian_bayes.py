@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
 
     num_moms = np.random.choice([10, 20])
-    max_val_ph = np.random.choice([200])
+    max_val_ph = np.random.choice([20, 50,200])
     model_type = 'cox'
     if sys.platform == 'linux':
         path_ph = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
@@ -254,7 +254,7 @@ if __name__ == "__main__":
 
         if sys.platform == 'linux':
 
-            path = '/scratch/eliransc/experiment_type_num_moms_max_ph_with_cox'
+            path = '/scratch/eliransc/experiment_type_num_moms_max_ph_with_cox_a'
 
             if not os.path.exists(path):
                 os.mkdir(path)
