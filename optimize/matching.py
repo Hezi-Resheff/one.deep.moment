@@ -35,11 +35,9 @@ class CoxianMatcher(object):
     @staticmethod
     def get_ph_from_coxiam(lams, ps, k):
         lams = lams ** 2
-        ps = torch.nn.functional.softmax(ps, 0)
+        ps = torch.sigmoid(ps)
         alpha = torch.eye(k)[0]
-
-        d2 = (lams * ps)[:-1]
-        T = torch.diag(-lams) + torch.diag(d2, 1)
+        T = torch.diag(-lams) + torch.diag(lams[:-1] * ps, 1)
         return alpha, T
 
     def compute_loss_cox(self, lams, ps, ws):
@@ -55,7 +53,7 @@ class CoxianMatcher(object):
     def fit(self, k, num_epochs, moment_weights, lambda_scale, lr=1e-4):
         # init
         lam = (torch.randn(k) * lambda_scale).detach().requires_grad_(True)
-        ps = torch.rand(k, requires_grad=True)
+        ps = torch.rand(k-1, requires_grad=True)
 
         # fit
         optimizer = torch.optim.Adam([lam, ps], lr=lr)
@@ -83,14 +81,11 @@ class CoxianMatcher(object):
                     print('########## breaking - stuck in local minumum #########')
                     break
 
-
             loss.backward()
             optimizer.step()
 
             if epoch % 1000 == 0 or epoch == num_epochs - 1:
                 print(f"Epoch {epoch}: loss = {loss}")
-
-
 
         return loss.detach().item(), self.get_ph_from_coxiam(lam, ps, k)
 
@@ -450,11 +445,14 @@ if __name__ == "__main__":
        4.62130449e+20, 1.97611567e+22, 8.90442423e+23, 4.21702620e+25])
 
     print(moments)
+    n_moments = len(moments)
+    k = 150
+
     num_epochs = 150000
     ws = moments ** (-1)
     matcher = CoxianMatcher(ms=moments)
 
-    _, (a, T) = matcher.fit_search_scale(150, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
+    _, (a, T) = matcher.fit_search_scale(k, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 
-    moment_table = moment_analytics(moments, compute_moments(a, T, 100, 20))
+    moment_table = moment_analytics(moments, compute_moments(a, T, k, n_moments))
     print(moment_table)
