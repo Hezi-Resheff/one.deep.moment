@@ -311,8 +311,8 @@ def cost_function(params):
 
     return loss
 
-num_moms = np.random.choice([5,10,20])
-max_val_ph = np.random.choice([20,50,200])
+num_moms = np.random.choice([20])
+max_val_ph = np.random.choice([200])
 
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
