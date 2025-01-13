@@ -148,7 +148,7 @@ class StopWhenThresholdReached:
 if __name__ == "__main__":
 
 
-    num_moms = np.random.choice([10, 20])
+    num_moms = np.random.choice([5, 10, 20])
     max_val_ph = np.random.choice([20, 50,200])
     model_type = 'cox'
     if sys.platform == 'linux':

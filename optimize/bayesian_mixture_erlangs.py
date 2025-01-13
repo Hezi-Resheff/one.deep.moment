@@ -421,7 +421,7 @@ for ind in range(1500):
 
     if sys.platform == 'linux':
 
-        path = '/scratch/eliransc/experiment_type_num_moms_max_ph_with_cox'
+        path = '/scratch/eliransc/experiment_type_num_moms_max_ph_with_cox_a'
         if not os.path.exists(path):
             os.mkdir(path)
         pkl.dump(df_tot_res, open(os.path.join(path, model_type+'_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph)  + '.pkl'), 'wb'))
