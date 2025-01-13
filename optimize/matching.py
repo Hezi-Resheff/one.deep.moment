@@ -277,7 +277,11 @@ class ErlangMomentMatcher(object):
             else:
                 current_scale /= 2
 
-        return best_so_far
+
+        if np.isnan(best_so_far[0]):
+            return 5000
+        else:
+            return best_so_far
 
 
 class MomentMatcher(object):
