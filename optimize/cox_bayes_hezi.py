@@ -12,6 +12,7 @@ from utils_sample_ph import *
 import pickle as pkl
 from skopt import gp_minimize
 from skopt.space import Integer, Real, Categorical
+
 # num_moms = 10
 
 def compute_skewness_and_kurtosis_from_raw(m1, m2, m3, m4):
@@ -66,19 +67,23 @@ def sample_PH(LB, UB, fitted_moms = 5):
 if sys.platform == 'linux':
     path_bayes_models = '/scratch/eliransc/bayes_models_classic'
 else:
-    path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models_classic'
-
+    path_bayes_models = '.' #r'C:\Users\Eshel\workspace\data\bayes_models_classic'
 
 
 
 def cost_function(params):
 
-    num_epochs = 150000
 
     print(f"    => Going with ls: {params}")
+
+
+    num_epochs = 150000
     ws = ms ** (-1)
-    matcher = MomentMatcher(ms)
-    loss, (a, T) = matcher.fit_search_scale(params[0].item(), moment_weights=ws, num_epochs=num_epochs, lr=5e-3)
+    matcher = CoxianMatcher(ms=ms)
+
+    loss, (a, T) = matcher.fit_search_scale(params[0], num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
+
+
     try:
         moments = compute_moments(a, T, T.shape[0], len(ms))
         moments = torch.stack(list(moments)).detach().numpy().round(2)
@@ -101,7 +106,6 @@ def cost_function(params):
             df_res.loc[curr_ind, 'true_mom_' + str(mom)] = ms[mom - 1].item()
             df_res.loc[curr_ind, 'est_mom_' + str(mom)] = moments[mom - 1].item()
             df_res.loc[curr_ind, 'error_' + str(mom)] = errors[mom - 1].item()
-
 
 
         print(df_res)
@@ -140,54 +144,41 @@ class StopWhenThresholdReached:
 
 if __name__ == "__main__":
 
-    # if sys.platform == 'linux':
-    #     bad_np, orig_size_arr = pkl.load( open('/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/bad_df.pkl', 'rb'))
-    # else:
-    #     bad_np, orig_size_arr = pkl.load( open(r'C:\Users\Eshel\workspace\data\bad_df.pkl', 'rb'))
 
 
-    model_type = 'general'
+    model_type = 'cox'
     if sys.platform == 'linux':
         path_ph = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
-        # df_dat = pd.read_csv(os.path.join(path_ph, 'PH_set.xls'))
-        # good_list_path = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment/optimize/good_list_ymca.pkl'
-        # good_list_path = '/home/eliransc/notebooks/good_list_20_moms.pkl'
-        # good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
-        # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
-
-
-        df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
-
-        good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_general.pkl')
+        df_dict_comb = pkl.load(open(os.path.join(path_ph, 'df_dict_comb.pkl'), 'rb'))
+        good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_cox_test.pkl')
 
     else:
-        path_ph = r'C:\Users\Eshel\workspace\data'
-        path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
+        path_ph = '.' #r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
         # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
-        # good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
-        # good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain_YMCA.pkl')
-        df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
+        # df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
 
 
-    for ind in range(1500):
+    for ind in range(2500):
         try:
             df_tot_res = pd.DataFrame([])
 
             run_num_tot = np.random.randint(1, 10000000)
 
-            num_moms = np.random.choice([5, 10, 20])
-            max_val_ph = np.random.choice([20, 50, 200])
+            num_moms = np.random.choice([5,10,20])
+            max_val_ph = np.random.choice([20,50,200])
 
             dataset_file = np.random.choice(['cox_df.pkl', 'hyper_df.pkl', 'general_df.pkl'])
 
-            df_dat = pkl.load(open(os.path.join(path_ph, dataset_file), 'rb'))
+            df_dat = pkl.load(open(os.path.join('.', dataset_file), 'rb'))
 
+            # list_keys = list(df_dict_comb.keys())
+
+            # curr_key_ind = np.random.randint(len(list_keys))
+            # df_dat = df_dict_comb[list_keys[curr_key_ind]]
             # good_list = pkl.load(open(good_list_path, 'rb'))
 
-            rand_ind = np.random.randint(0,200) #np.random.choice(good_list[(max_val_ph, num_moms)]).item()
+            rand_ind = np.random.randint(0,200) # np.random.choice(good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])]).item()
 
-            # good_list[(max_val_ph, num_moms)] = good_list[(max_val_ph, num_moms)][good_list[(max_val_ph, num_moms)] != rand_ind]
-            # pkl.dump(good_list, open(good_list_path, 'wb'))
 
             cols = []
             for mom in range(1, num_moms + 1):
@@ -212,7 +203,7 @@ if __name__ == "__main__":
 
             # Define the search space for each parameter
             space = [
-                Integer(1, max_val_ph, name='use_size'),  # Continuous space for x1 between 0 and 10
+                Integer(5, max_val_ph, name='use_size'),  # Continuous space for x1 between 0 and 10
             ]
 
             # Instantiate the stopping callback
@@ -223,7 +214,7 @@ if __name__ == "__main__":
             result = gp_minimize(
                 func=cost_function,  # The objective function to minimize
                 dimensions=space,  # The search space
-                n_calls=9,  # Number of evaluations of the objective function
+                n_calls=15,  # Number of evaluations of the objective function
                 n_random_starts=5,
                 callback=[print_score, stop_callback],  # Number of random starting points
                 random_state=42  # Random seed for reproducibility
@@ -260,33 +251,28 @@ if __name__ == "__main__":
             df_tot_res.loc[curr_ind_tot, 'PH_fit_size'] = max_val_ph
 
 
+
             if sys.platform == 'linux':
 
-                # path = '/scratch/eliransc/125K_iter_mom_match_bayes_classic_'+str(num_moms)
-                path = '/scratch/eliransc/cox_mom_match_bayes_classic_moms_' + str(num_moms)
-                path = '/scratch/eliransc/experiment_type_num_moms_max_ph'
+                path = '/scratch/eliransc/experiment_type_num_moms_max_ph_with_cox_a'
 
                 if not os.path.exists(path):
                     os.mkdir(path)
 
-                pkl.dump(df_tot_res, open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph)  + '.pkl'), 'wb'))
+                pkl.dump(df_tot_res, open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
             else:
 
-                path_dump = r'C:\Users\Eshel\workspace\data\mom_mathcher_data\all_datasets_all_models'
+                path_dump = '.'
 
                 pkl.dump(df_tot_res,
-                         open(os.path.join(path_dump,
-                                           'dataset_' + dataset_file[:-4] + '_' + model_type + '_model_final_' + str(
-                                               run_num_tot) + 'num_moms_' + str(
-                                               num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
-
+                         open(os.path.join(path_dump, 'dataset_' + dataset_file[:-4] + '_' + model_type + '_model_final_' + str(
+                             run_num_tot) + 'num_moms_' + str(
+                             num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
                 # path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic_cox_'+str(num_moms)
                 # pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
-
-
-
         except:
-            print('error in the bayesian optimiization')
+            print('Bad iteration')
+
 
 
 

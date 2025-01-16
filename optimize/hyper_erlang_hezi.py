@@ -239,12 +239,8 @@ class ErlangMomentMatcher(object):
 #
 #         return best_so_far
 
-if sys.platform == 'linux':
-    path_bayes_models = '/scratch/eliransc/bayes_models'
-else:
-    path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models'
 
-
+path_bayes_models = '.'
 
 
 def cost_function(params):
@@ -325,7 +321,7 @@ else:
     # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
     # good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
     # good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain_YMCA.pkl')
-    df_dat = pkl.load(open(os.path.join(path_ph, 'cox_df.pkl'), 'rb'))
+    # df_dat = pkl.load(open(os.path.join(path_ph, 'cox_df.pkl'), 'rb'))
 
 
 model_type = 'mix_erlang'
@@ -343,7 +339,7 @@ for ind in range(2500):
 
         dataset_file = np.random.choice(['cox_df.pkl', 'hyper_df.pkl', 'general_df.pkl'])
 
-        df_dat = pkl.load(open(os.path.join(path_ph, dataset_file), 'rb'))
+        df_dat = pkl.load(open(os.path.join('.', dataset_file), 'rb'))
 
         # list_keys = list(df_dict_comb.keys())
 
@@ -445,10 +441,10 @@ for ind in range(2500):
             # pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_' + '.pkl'), 'wb'))
 
             # path = r'C:\Users\Eshel\workspace\data\mom_mathcher_data\general_dataset_results'
-            path = r'C:\Users\Eshel\workspace\data\mom_mathcher_data\all_datasets_all_models'
+            path_dump = '.'
 
             pkl.dump(df_tot_res,
-                     open(os.path.join(path, 'dataset_'+ dataset_file[:-4] + '_' +  model_type + '_model_final_' + str(run_num_tot) + 'num_moms_' + str(
+                     open(os.path.join(path_dump, 'dataset_'+ dataset_file[:-4] + '_' +  model_type + '_model_final_' + str(run_num_tot) + 'num_moms_' + str(
                          num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
 
 

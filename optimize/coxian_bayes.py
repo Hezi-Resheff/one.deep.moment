@@ -155,7 +155,7 @@ if __name__ == "__main__":
     else:
         path_ph = '.' #r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
         # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
-        df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
+        # df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
 
 
     for ind in range(1500):
@@ -166,6 +166,10 @@ if __name__ == "__main__":
 
         num_moms = np.random.choice([5,10,20])
         max_val_ph = np.random.choice([20,50,200])
+
+        dataset_file = np.random.choice(['cox_df.pkl', 'hyper_df.pkl', 'general_df.pkl'])
+
+        df_dat = pkl.load(open(os.path.join(path_ph, dataset_file), 'rb'))
 
         # list_keys = list(df_dict_comb.keys())
 
@@ -258,10 +262,11 @@ if __name__ == "__main__":
             pkl.dump(df_tot_res, open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
         else:
 
-            path_dump = '.' #r'C:\Users\Eshel\workspace\data\mom_mathcher_data\general_dataset_results'
+            path_dump = r'C:\Users\Eshel\workspace\data\mom_mathcher_data\all_datasets_all_models'
 
             pkl.dump(df_tot_res,
-                     open(os.path.join(path_dump, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_' + str(
+                     open(os.path.join(path_dump, 'dataset_' + dataset_file[:-4] + '_' + model_type + '_model_final_' + str(
+                         run_num_tot) + 'num_moms_' + str(
                          num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
             # path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic_cox_'+str(num_moms)
             # pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))

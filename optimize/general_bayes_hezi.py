@@ -63,12 +63,9 @@ def sample_PH(LB, UB, fitted_moms = 5):
     return a, A, ms
 
 
-if sys.platform == 'linux':
-    path_bayes_models = '/scratch/eliransc/bayes_models_classic'
-else:
-    path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models_classic'
 
 
+path_bayes_models = '.'
 
 
 def cost_function(params):
@@ -170,6 +167,7 @@ if __name__ == "__main__":
 
 
     for ind in range(1500):
+
         try:
             df_tot_res = pd.DataFrame([])
 
@@ -272,7 +270,7 @@ if __name__ == "__main__":
                 pkl.dump(df_tot_res, open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph)  + '.pkl'), 'wb'))
             else:
 
-                path_dump = r'C:\Users\Eshel\workspace\data\mom_mathcher_data\all_datasets_all_models'
+                path_dump = '.'
 
                 pkl.dump(df_tot_res,
                          open(os.path.join(path_dump,
