@@ -80,7 +80,7 @@ def moment_analytics(ms, comp):
     computed_moments = [m.detach().item() for m in comp]
     moment_table = pd.DataFrame([computed_moments, original_moments], index="computed target".split()).T
     moment_table["delta"] = moment_table["computed"] - moment_table["target"]
-    moment_table["delta-relative"] = moment_table["delta"] / moment_table["target"]
+    moment_table["delta-relative"] = 100*moment_table["delta"] / moment_table["target"]
     return moment_table
 
 

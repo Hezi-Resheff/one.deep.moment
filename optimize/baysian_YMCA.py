@@ -10,6 +10,7 @@ import os
 sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
 import pickle as pkl
+from skopt import gp_minimize
 from skopt.space import Integer, Real, Categorical
 # num_moms = 10
 
@@ -67,16 +68,12 @@ if sys.platform == 'linux':
 else:
     path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models_classic'
 
-df_tot_res = pd.DataFrame([])
 
-run_num_tot =  np.random.randint(1,10000000)
 
 
 def cost_function(params):
 
-    num_epochs = 225000
-
-
+    num_epochs = 150000
 
     print(f"    => Going with ls: {params}")
     ws = ms ** (-1)
@@ -148,8 +145,7 @@ if __name__ == "__main__":
     # else:
     #     bad_np, orig_size_arr = pkl.load( open(r'C:\Users\Eshel\workspace\data\bad_df.pkl', 'rb'))
 
-    num_moms = np.random.choice([5, 10, 20])
-    max_val_ph = np.random.choice([20, 50, 200])
+
     model_type = 'general'
     if sys.platform == 'linux':
         path_ph = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
@@ -159,28 +155,35 @@ if __name__ == "__main__":
         # good_list_path = '/home/eliransc/notebooks/good_list_20_moms_coxain.pkl'
         # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
 
-        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_experiment.pkl'), 'rb'))
-        df_dat = pkl.load(open(os.path.join(path_ph, 'PH_set_new.pkl'), 'rb'))
 
+        df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
 
         good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_general.pkl')
 
     else:
         path_ph = r'C:\Users\Eshel\workspace\data'
         path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
-        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
+        # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
         # good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
-        good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain_YMCA.pkl')
+        # good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain_YMCA.pkl')
+        df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
 
 
     for ind in range(1500):
 
-        good_list = pkl.load(open(good_list_path, 'rb'))
+        df_tot_res = pd.DataFrame([])
 
-        rand_ind = np.random.choice(good_list[(max_val_ph, num_moms)]).item()
+        run_num_tot = np.random.randint(1, 10000000)
 
-        good_list[(max_val_ph, num_moms)] = good_list[(max_val_ph, num_moms)][good_list[(max_val_ph, num_moms)] != rand_ind]
-        pkl.dump(good_list, open(good_list_path, 'wb'))
+        num_moms = np.random.choice([5, 10, 20])
+        max_val_ph = np.random.choice([20, 50, 200])
+
+        # good_list = pkl.load(open(good_list_path, 'rb'))
+
+        rand_ind = np.random.randint(0,200) #np.random.choice(good_list[(max_val_ph, num_moms)]).item()
+
+        # good_list[(max_val_ph, num_moms)] = good_list[(max_val_ph, num_moms)][good_list[(max_val_ph, num_moms)] != rand_ind]
+        # pkl.dump(good_list, open(good_list_path, 'wb'))
 
         cols = []
         for mom in range(1, num_moms + 1):
@@ -216,7 +219,7 @@ if __name__ == "__main__":
         result = gp_minimize(
             func=cost_function,  # The objective function to minimize
             dimensions=space,  # The search space
-            n_calls=15,  # Number of evaluations of the objective function
+            n_calls=9,  # Number of evaluations of the objective function
             n_random_starts=5,
             callback=[print_score, stop_callback],  # Number of random starting points
             random_state=42  # Random seed for reproducibility
@@ -264,8 +267,14 @@ if __name__ == "__main__":
 
             pkl.dump(df_tot_res, open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph)  + '.pkl'), 'wb'))
         else:
-            path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic_cox_'+str(num_moms)
-            pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+
+            path = r'C:\Users\Eshel\workspace\data\mom_mathcher_data\general_dataset_results'
+
+            pkl.dump(df_tot_res, open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_' + str(
+                                                       num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
+
+            # path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic_cox_'+str(num_moms)
+            # pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
 
 
 

@@ -71,7 +71,7 @@ class CoxianMatcher(object):
             if loss < MIN_LOSS_EPSILON:
                 break
 
-            if len(loss_list) > 10000:
+            if len(loss_list) > 4000:
                 if loss.item() > 10e4:
                     print('########## breaking - loss is too big #########')
                     break
@@ -187,7 +187,7 @@ class MultiErlangMomentMatcher(object):
 
         return loss.detach().item(), self.get_ph_mix_erlang(lam, alpha)
 
-    def fit_search_scale(self, num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=100, min_scale=1):
+    def fit_search_scale(self, num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=50, min_scale=1):
         loss = 1
         current_scale = max_scale
 
@@ -200,6 +200,14 @@ class MultiErlangMomentMatcher(object):
             print('##########################################')
             current_loss, (a, T) = self.fit(num_epochs=num_epochs, moment_weights=moment_weights, lr=lr, lambda_scale=current_scale)
 
+            moments = compute_moments(a, T, k, len(self.ms))
+            moments = torch.stack(list(moments)).detach().numpy().round(2)
+
+            errors = 100 * torch.abs((torch.tensor(moments) - self.ms) / self.ms)
+            print('###############################################################################################')
+            print(errors.max().item())
+            print('###############################################################################################')
+
             if current_loss < best_so_far[0]:
                 best_so_far = (current_loss, (a, T))
 
@@ -211,6 +219,10 @@ class MultiErlangMomentMatcher(object):
         if np.isnan(best_so_far[0]):
             return 5000
         else:
+
+            if errors.max().item() < 0.1:
+                best_so_far = 1e-8
+
             return best_so_far
 
 
@@ -315,9 +327,15 @@ class MomentMatcher(object):
                 print('########## breaking - loss is inf #########')
                 break
 
+            if np.isnan(loss.item()):
+                print('########## breaking - nan #########')
+
+                break
+
+
             if len(loss_history) > 10000:
 
-                if loss.item() > 10e7:
+                if loss.item() > 10e4:
                     print('########## breaking - loss is too big #########')
                     break
 
@@ -358,7 +376,7 @@ class MomentMatcher(object):
 
         return loss.detach().item(),  make_ph(lambdas, ps, alpha, k) # (lambdas, ps, alpha),
 
-    def fit_search_scale(self, k,num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=100, min_scale=1):
+    def fit_search_scale(self, k,num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=50, min_scale=1):
         loss = 1
         current_scale = max_scale
 
@@ -373,6 +391,14 @@ class MomentMatcher(object):
             current_loss, (a, T) = self.fit_ph_distribution(k, num_epochs=num_epochs, moment_weights=moment_weights, lr=lr,
                                             lambda_scale=current_scale)
 
+            moments = compute_moments(a, T, k, len(self.ms))
+            moments = torch.stack(list(moments)).detach().numpy().round(2)
+
+            errors = 100*torch.abs((torch.tensor(moments)-self.ms)/self.ms)
+            print('###############################################################################################')
+            print(errors.max().item())
+            print('###############################################################################################')
+
             if current_loss < best_so_far[0]:
                 best_so_far = (current_loss, (a, T))
 
@@ -384,28 +410,11 @@ class MomentMatcher(object):
         if np.isnan(best_so_far[0]):
             return 5000
         else:
+            if errors.max().item() < 0.1:
+                best_so_far = 1e-8
             return best_so_far
 
-    def fit_cascade(self, k_min, k_max, num_epochs=1000, moment_weights=None,
-                            lambda_scale=100, lr=1e-4, init=None):
 
-        out = {}
-
-        ps = torch.randn(k_min, k_min)
-        lambdas = torch.rand(k_min) * lambda_scale
-        alpha = torch.randn(k_min, requires_grad=True)
-
-        for k in range(k_min, k_max+1):
-            print(f"==> Trying with k = {k}...")
-            init = lambdas, ps, alpha
-            this_out = self.fit_ph_distribution(k, num_epochs=num_epochs, moment_weights=moment_weights,
-                                                lambda_scale=lambda_scale, lr=lr, init=init)
-
-            (lambdas, ps, alpha), (a, T), moments, loss = this_out
-            out[k] = this_out
-            lambdas, ps, alpha = embedd_next_parametrization(lambdas, ps, alpha, k)
-
-        return out
 
 
 # Temporary, so old code that uses this module doesn't break
@@ -442,19 +451,18 @@ if __name__ == "__main__":
 
 
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    moments = torch.tensor([1.00000000e+00, 4.07605304e+00, 3.01224619e+01, 3.03895838e+02,
-       3.81433744e+03, 5.69857281e+04, 9.85788989e+05, 1.93629874e+07,
-       4.25499627e+08, 1.03396088e+10, 2.75229621e+11, 7.96328946e+12,
-       2.48803205e+14, 8.34765775e+15, 2.99315864e+17, 1.14216888e+19,
-       4.62130449e+20, 1.97611567e+22, 8.90442423e+23, 4.21702620e+25])
+    moments = torch.tensor([1.00000012e+00, 1.22453661e+01, 2.52054971e+02, 6.94014597e+03,
+       2.38889248e+05, 9.86750350e+06, 4.75515602e+08, 2.61887230e+10,
+       1.62261827e+12, 1.11705848e+14, 8.45917542e+15, 6.98825671e+17,
+       6.25420106e+19, 6.02780640e+21, 6.22457937e+23, 6.85629407e+25,
+       8.02412798e+27, 9.94328464e+29, 1.30059798e+32, 1.79073993e+34])
 
     print(moments)
     n_moments = len(moments)
-    k = 150
-
+    k = 45
     num_epochs = 150000
     ws = moments ** (-1)
-    matcher = CoxianMatcher(ms=moments)
+    matcher = MomentMatcher(ms = moments) #CoxianMatcher(ms=moments)
 
     _, (a, T) = matcher.fit_search_scale(k, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 

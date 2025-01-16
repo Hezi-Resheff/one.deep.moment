@@ -9,7 +9,7 @@ import os
 import sys
 # Stop optimization when the loss hits this value
 MIN_LOSS_EPSILON = 1e-7
-
+from matching import *
 
 sys.path.append(os.path.abspath(".."))
 from utils_sample_ph import *
@@ -144,100 +144,100 @@ class ErlangMomentMatcher(object):
                 print(f"Epoch {epoch}: loss = {loss}")
 
 
-class MultiErlangMomentMatcher(object):
-    def __init__(self, ms, ls):
-        self.ms = ms
-        self.ls = ls
-        self.k = sum(ls)
-
-    def get_ph_mix_erlang(self, lam, alpha):
-        lams = lam ** 2
-        alphas = torch.nn.functional.softmax(alpha, 0)
-
-        aT = [ErlangMomentMatcher.ph_from_lam(lmd, l)  for lmd, l in zip(lams, self.ls)]
-        T = torch.block_diag(*[T[1] for T in aT])
-        a = torch.cat([a[0] * a_ for a, a_ in zip(aT, alphas)])
-        return a, T
-
-    def compute_loss_mix_erlang(self, lam, alpha, ws):
-        a, T = self.get_ph_mix_erlang(lam, alpha)
-        moments = compute_moments(a, T, self.k, len(self.ms))
-        moments = torch.stack(list(moments))
-
-        error = (moments - ms)
-        weighted_error = error * ws
-        return torch.mean(weighted_error ** 2)
-
-    def fit(self, num_epochs=1000, moment_weights=None, lambda_scale=100, lr=1e-4):
-        # init
-        lam = torch.tensor(torch.rand(len(self.ls)) * lambda_scale, requires_grad=True)
-        alpha = torch.rand(len(self.ls), requires_grad=True)
-
-        # fit
-        optimizer = torch.optim.Adam([lam, alpha], lr=lr)
-        loss_list  = []
-        for epoch in range(num_epochs):
-            optimizer.zero_grad()
-            loss = self.compute_loss_mix_erlang(lam, alpha, moment_weights)
-            loss_list.append(loss.item())
-            if loss < MIN_LOSS_EPSILON:
-                break
-
-            if np.isnan(loss.item()):
-                print('########## breaking - nan #########')
-                break
-
-            if len(loss_list) > 20000:
-                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
-                    print('########## breaking - stuck in local minumum #########')
-                    break
-                elif loss.item() > 10e4:
-                    print('########## breaking - loss is too big #########')
-                    break
-
-
-            elif loss < MIN_LOSS_EPSILON*10:
-                lr = 1e-5
-
-            loss.backward()
-            optimizer.step()
-
-            if epoch % 1000 == 0 or epoch == num_epochs - 1:
-                print(f"Epoch {epoch}: loss = {loss}")
-                if epoch % 10000 == 0:
-                    a, T = self.get_ph_mix_erlang(lam, alpha)
-                    moments = compute_moments(a, T, self.k, len(self.ms))
-                    moments = torch.stack(list(moments)).detach().numpy().round(2)
-
-                    print(f" => moments are: {moments}")
-                    print(f" => true moments are: {self.ms}")
-                    print(100 * (self.ms - moments) / self.ms)
-
-        return loss.detach().item(), self.get_ph_mix_erlang(lam, alpha)
-
-    def fit_search_scale(self, num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=100, min_scale=1):
-        loss = 1
-        current_scale = max_scale
-
-        best_so_far = (np.inf, (None, None))
-
-        while current_scale > min_scale:
-            loss_list = []
-            print('##########################################')
-            print('  Starting scale: ', current_scale)
-            print('##########################################')
-            current_loss, (a, T) = self.fit(num_epochs=num_epochs, moment_weights=moment_weights, lr=lr, lambda_scale=current_scale)
-
-            if current_loss < best_so_far[0]:
-                best_so_far = (current_loss, (a, T))
-
-
-            if current_loss < MIN_LOSS_EPSILON:
-                return current_loss, (a, T)
-            else:
-                current_scale /= 2
-
-        return best_so_far
+# class MultiErlangMomentMatcher(object):
+#     def __init__(self, ms, ls):
+#         self.ms = ms
+#         self.ls = ls
+#         self.k = sum(ls)
+#
+#     def get_ph_mix_erlang(self, lam, alpha):
+#         lams = lam ** 2
+#         alphas = torch.nn.functional.softmax(alpha, 0)
+#
+#         aT = [ErlangMomentMatcher.ph_from_lam(lmd, l)  for lmd, l in zip(lams, self.ls)]
+#         T = torch.block_diag(*[T[1] for T in aT])
+#         a = torch.cat([a[0] * a_ for a, a_ in zip(aT, alphas)])
+#         return a, T
+#
+#     def compute_loss_mix_erlang(self, lam, alpha, ws):
+#         a, T = self.get_ph_mix_erlang(lam, alpha)
+#         moments = compute_moments(a, T, self.k, len(self.ms))
+#         moments = torch.stack(list(moments))
+#
+#         error = (moments - ms)
+#         weighted_error = error * ws
+#         return torch.mean(weighted_error ** 2)
+#
+#     def fit(self, num_epochs=1000, moment_weights=None, lambda_scale=100, lr=1e-4):
+#         # init
+#         lam = torch.tensor(torch.rand(len(self.ls)) * lambda_scale, requires_grad=True)
+#         alpha = torch.rand(len(self.ls), requires_grad=True)
+#
+#         # fit
+#         optimizer = torch.optim.Adam([lam, alpha], lr=lr)
+#         loss_list  = []
+#         for epoch in range(num_epochs):
+#             optimizer.zero_grad()
+#             loss = self.compute_loss_mix_erlang(lam, alpha, moment_weights)
+#             loss_list.append(loss.item())
+#             if loss < MIN_LOSS_EPSILON:
+#                 break
+#
+#             if np.isnan(loss.item()):
+#                 print('########## breaking - nan #########')
+#                 break
+#
+#             if len(loss_list) > 20000:
+#                 if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
+#                     print('########## breaking - stuck in local minumum #########')
+#                     break
+#                 elif loss.item() > 10e4:
+#                     print('########## breaking - loss is too big #########')
+#                     break
+#
+#
+#             elif loss < MIN_LOSS_EPSILON*10:
+#                 lr = 1e-5
+#
+#             loss.backward()
+#             optimizer.step()
+#
+#             if epoch % 1000 == 0 or epoch == num_epochs - 1:
+#                 print(f"Epoch {epoch}: loss = {loss}")
+#                 if epoch % 10000 == 0:
+#                     a, T = self.get_ph_mix_erlang(lam, alpha)
+#                     moments = compute_moments(a, T, self.k, len(self.ms))
+#                     moments = torch.stack(list(moments)).detach().numpy().round(2)
+#
+#                     print(f" => moments are: {moments}")
+#                     print(f" => true moments are: {self.ms}")
+#                     print(100 * (self.ms - moments) / self.ms)
+#
+#         return loss.detach().item(), self.get_ph_mix_erlang(lam, alpha)
+#
+#     def fit_search_scale(self, num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=50, min_scale=1):
+#         loss = 1
+#         current_scale = max_scale
+#
+#         best_so_far = (np.inf, (None, None))
+#
+#         while current_scale > min_scale:
+#             loss_list = []
+#             print('##########################################')
+#             print('  Starting scale: ', current_scale)
+#             print('##########################################')
+#             current_loss, (a, T) = self.fit(num_epochs=num_epochs, moment_weights=moment_weights, lr=lr, lambda_scale=current_scale)
+#
+#             if current_loss < best_so_far[0]:
+#                 best_so_far = (current_loss, (a, T))
+#
+#
+#             if current_loss < MIN_LOSS_EPSILON:
+#                 return current_loss, (a, T)
+#             else:
+#                 current_scale /= 2
+#
+#         return best_so_far
 
 if sys.platform == 'linux':
     path_bayes_models = '/scratch/eliransc/bayes_models'
@@ -259,7 +259,7 @@ def cost_function(params):
     print(f"    => Going with ls: {ls}")
     ws = ms ** (-1)
     t = MultiErlangMomentMatcher(ms=ms, ls=ls)
-    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=60000, lr=5e-3)
+    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=80000, lr=5e-3)
 
     moments = compute_moments(a, T, T.shape[0], len(ms))
     moments = torch.stack(list(moments)).detach().numpy().round(2)
@@ -311,35 +311,42 @@ def cost_function(params):
 
     return loss
 
-num_moms = np.random.choice([20])
-max_val_ph = np.random.choice([200])
+
 
 if sys.platform == 'linux':
     path_ph  = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
-    df_dict_comb = pkl.load(open(os.path.join(path_ph, 'df_dict_comb.pkl'), 'rb'))
-    good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_mixture_test.pkl')
+    # df_dict_comb = pkl.load(open(os.path.join(path_ph, 'df_dict_comb.pkl'), 'rb'))
+    # good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_mixture_test.pkl')
+
+
+    df_dat = pkl.load(open(os.path.join(path_ph, 'general_df_lower_moms.pkl'), 'rb'))
 
 else:
+    path_ph = r'C:\Users\Eshel\workspace\data'
     path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
-    # df_dat = pkl.load( open(os.path.join(path_ph, 'PH_set.pkl'), 'rb'))
-    df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
-    good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain.pkl')
+    # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
+    # good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
+    # good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain_YMCA.pkl')
+    df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
 
 
 model_type = 'mix_erlang'
 
 for ind in range(1500):
 
-    list_keys = list(df_dict_comb.keys())
+    num_moms = np.random.choice([5,10, 20])
+    max_val_ph = np.random.choice([20,50, 200])
 
-    curr_key_ind = np.random.randint(len(list_keys))
-    df_dat = df_dict_comb[list_keys[curr_key_ind]]
-    good_list = pkl.load(open(good_list_path, 'rb'))
+    # list_keys = list(df_dict_comb.keys())
 
-    rand_ind = np.random.choice(good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])]).item()
+    # curr_key_ind = np.random.randint(len(list_keys))
+    # df_dat = df_dict_comb[list_keys[curr_key_ind]]
+    # good_list = pkl.load(open(good_list_path, 'rb'))
 
-    good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] = good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])][good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] != rand_ind]
-    pkl.dump(good_list, open(good_list_path, 'wb'))
+    rand_ind = np.random.randint(0,200) #np.random.choice(good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])]).item()
+
+    # good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] = good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])][good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] != rand_ind]
+    # pkl.dump(good_list, open(good_list_path, 'wb'))
 
     cols = []
     for mom in range(1, num_moms + 1):
@@ -380,7 +387,7 @@ for ind in range(1500):
     result = gp_minimize(
         func=cost_function,  # The objective function to minimize
         dimensions=space,  # The search space
-        n_calls=25,  # Number of evaluations of the objective function
+        n_calls=12,  # Number of evaluations of the objective function
         n_random_starts=5,
         callback=[print_score,stop_callback],  # Number of random starting points
         random_state=42  # Random seed for reproducibility
@@ -416,20 +423,24 @@ for ind in range(1500):
 
     df_tot_res.loc[curr_ind_tot, 'PH_fit_size'] = max_val_ph
 
-    df_tot_res.loc[curr_ind_tot, 'key_ind'] = curr_key_ind
+    # df_tot_res.loc[curr_ind_tot, 'key_ind'] = curr_key_ind
 
 
     if sys.platform == 'linux':
 
-        path = '/scratch/eliransc/experiment_type_num_moms_max_ph_with_cox_a'
+        path = '/scratch/eliransc/results_with_new_general'
         if not os.path.exists(path):
             os.mkdir(path)
         pkl.dump(df_tot_res, open(os.path.join(path, model_type+'_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph)  + '.pkl'), 'wb'))
     else:
-        path = r'C:\Users\Eshel\workspace\data\mom_matching_moms_10_cox'
-        pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_' + '.pkl'), 'wb'))
+        # path = r'C:\Users\Eshel\workspace\data\mom_matching_moms_10_cox'
+        # pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_' + '.pkl'), 'wb'))
 
+        path = r'C:\Users\Eshel\workspace\data\mom_mathcher_data\general_dataset_results'
 
+        pkl.dump(df_tot_res,
+                 open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_' + str(
+                     num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
 
 
     # except:
