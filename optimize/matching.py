@@ -102,6 +102,14 @@ class CoxianMatcher(object):
 
             current_loss, (a, T) = self.fit(k, num_epochs, moment_weights, current_scale)
 
+            moments = compute_moments(a, T, k, len(self.ms))
+            moments = torch.stack(list(moments)).detach().numpy().round(2)
+
+            errors = 100 * torch.abs((torch.tensor(moments) - self.ms) / self.ms)
+            print('###############################################################################################')
+            print(errors.max().item())
+            print('###############################################################################################')
+
             if current_loss < best_so_far[0]:
                 best_so_far = (current_loss, (a, T))
 
@@ -113,6 +121,10 @@ class CoxianMatcher(object):
         if np.isnan(best_so_far[0]):
             return 5000
         else:
+
+            if errors.max().item() < 0.1:
+                best_so_far = 1e-8
+
             return best_so_far
 
         # return best_so_far
@@ -158,6 +170,10 @@ class MultiErlangMomentMatcher(object):
             if loss < MIN_LOSS_EPSILON:
                 break
 
+            if np.isnan(loss.item()):
+                print('########## breaking - nan #########')
+                break
+
             if len(loss_list) > 10000:
                 if loss.item() > 10e4:
                     print('########## breaking - loss is too big #########')
@@ -200,7 +216,7 @@ class MultiErlangMomentMatcher(object):
             print('##########################################')
             current_loss, (a, T) = self.fit(num_epochs=num_epochs, moment_weights=moment_weights, lr=lr, lambda_scale=current_scale)
 
-            moments = compute_moments(a, T, k, len(self.ms))
+            moments = compute_moments(a, T, self.k, len(self.ms))
             moments = torch.stack(list(moments)).detach().numpy().round(2)
 
             errors = 100 * torch.abs((torch.tensor(moments) - self.ms) / self.ms)

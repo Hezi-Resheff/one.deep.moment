@@ -244,9 +244,7 @@ if sys.platform == 'linux':
 else:
     path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models'
 
-df_tot_res = pd.DataFrame([])
 
-run_num_tot =  np.random.randint(1,10000000)
 
 
 def cost_function(params):
@@ -259,7 +257,7 @@ def cost_function(params):
     print(f"    => Going with ls: {ls}")
     ws = ms ** (-1)
     t = MultiErlangMomentMatcher(ms=ms, ls=ls)
-    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=80000, lr=5e-3)
+    loss, (a, T) = t.fit_search_scale(moment_weights=ws, num_epochs=62000, lr=5e-3)
 
     moments = compute_moments(a, T, T.shape[0], len(ms))
     moments = torch.stack(list(moments)).detach().numpy().round(2)
@@ -333,6 +331,10 @@ else:
 model_type = 'mix_erlang'
 
 for ind in range(1500):
+
+    df_tot_res = pd.DataFrame([])
+
+    run_num_tot = np.random.randint(1, 10000000)
 
     num_moms = np.random.choice([5,10, 20])
     max_val_ph = np.random.choice([20,50, 200])

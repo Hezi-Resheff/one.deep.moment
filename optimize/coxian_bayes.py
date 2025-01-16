@@ -67,11 +67,8 @@ def sample_PH(LB, UB, fitted_moms = 5):
 if sys.platform == 'linux':
     path_bayes_models = '/scratch/eliransc/bayes_models_classic'
 else:
-    path_bayes_models = r'C:\Users\Eshel\workspace\data\bayes_models_classic'
+    path_bayes_models = '.' #r'C:\Users\Eshel\workspace\data\bayes_models_classic'
 
-df_tot_res = pd.DataFrame([])
-
-run_num_tot =  np.random.randint(1,10000000)
 
 
 def cost_function(params):
@@ -148,8 +145,7 @@ class StopWhenThresholdReached:
 if __name__ == "__main__":
 
 
-    num_moms = np.random.choice([5, 10, 20])
-    max_val_ph = np.random.choice([20, 50,200])
+
     model_type = 'cox'
     if sys.platform == 'linux':
         path_ph = '/home/eliransc/projects/def-dkrass/eliransc/one.deep.moment'
@@ -157,27 +153,28 @@ if __name__ == "__main__":
         good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_cox_test.pkl')
 
     else:
-        path_ph = r'C:\Users\Eshel\workspace\data'
-        path_ph = r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
-        df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
-        # good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
-        good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain_YMCA.pkl')
+        path_ph = '.' #r'C:\Users\Eshel\workspace\data\mom_mathcher_data'
+        # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
+        df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
 
 
     for ind in range(1500):
 
-        list_keys = list(df_dict_comb.keys())
+        df_tot_res = pd.DataFrame([])
 
-        curr_key_ind = np.random.randint(len(list_keys))
-        df_dat = df_dict_comb[list_keys[curr_key_ind]]
-        good_list = pkl.load(open(good_list_path, 'rb'))
+        run_num_tot = np.random.randint(1, 10000000)
 
-        rand_ind = np.random.choice(good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])]).item()
+        num_moms = np.random.choice([5,10,20])
+        max_val_ph = np.random.choice([20,50,200])
 
-        good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] = \
-        good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])][
-            good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])] != rand_ind]
-        pkl.dump(good_list, open(good_list_path, 'wb'))
+        # list_keys = list(df_dict_comb.keys())
+
+        # curr_key_ind = np.random.randint(len(list_keys))
+        # df_dat = df_dict_comb[list_keys[curr_key_ind]]
+        # good_list = pkl.load(open(good_list_path, 'rb'))
+
+        rand_ind = np.random.randint(0,200) # np.random.choice(good_list[(max_val_ph, num_moms, list_keys[curr_key_ind])]).item()
+
 
         cols = []
         for mom in range(1, num_moms + 1):
@@ -249,7 +246,6 @@ if __name__ == "__main__":
 
         df_tot_res.loc[curr_ind_tot, 'PH_fit_size'] = max_val_ph
 
-        df_tot_res.loc[curr_ind_tot, 'key_ind'] = curr_key_ind
 
 
         if sys.platform == 'linux':
@@ -261,8 +257,14 @@ if __name__ == "__main__":
 
             pkl.dump(df_tot_res, open(os.path.join(path, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_'+str(num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
         else:
-            path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic_cox_'+str(num_moms)
-            pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
+
+            path_dump = '.' #r'C:\Users\Eshel\workspace\data\mom_mathcher_data\general_dataset_results'
+
+            pkl.dump(df_tot_res,
+                     open(os.path.join(path_dump, model_type + '_model_final_' + str(run_num_tot) + 'num_moms_' + str(
+                         num_moms) + '_max_PH_' + str(max_val_ph) + '.pkl'), 'wb'))
+            # path = r'C:\Users\Eshel\workspace\data\mom_matching_bayes_classic_cox_'+str(num_moms)
+            # pkl.dump(df_tot_res, open(os.path.join(path, 'model_final_' + str(run_num_tot) + '.pkl'), 'wb'))
 
 
 
