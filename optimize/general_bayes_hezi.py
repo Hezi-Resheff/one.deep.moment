@@ -153,7 +153,7 @@ if __name__ == "__main__":
         # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms_cox.pkl'), 'rb'))
 
 
-        df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
+
 
         good_list_path = os.path.join(path_ph, 'good_list_general_experiment_new_general.pkl')
 
@@ -163,7 +163,7 @@ if __name__ == "__main__":
         # df_dat = pkl.load(open(os.path.join(path_ph, 'ph_size_20_moms.pkl'), 'rb'))
         # good_list_path = r'C:\Users\Eshel\workspace\one.deep.moment\old\good_list_ymca.pkl'
         # good_list_path = os.path.join(path_ph, 'good_list_20_moms_coxain_YMCA.pkl')
-        df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
+        # df_dat = pkl.load(open(os.path.join(path_ph, 'general_df.pkl'), 'rb'))
 
 
     for ind in range(1500):
@@ -178,7 +178,7 @@ if __name__ == "__main__":
 
             dataset_file = np.random.choice(['cox_df.pkl', 'hyper_df.pkl', 'general_df.pkl'])
 
-            df_dat = pkl.load(open(os.path.join(path_ph, dataset_file), 'rb'))
+            df_dat = pkl.load(open(os.path.join('.', dataset_file), 'rb'))
 
             # good_list = pkl.load(open(good_list_path, 'rb'))
 
