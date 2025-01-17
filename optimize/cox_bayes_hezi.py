@@ -214,7 +214,7 @@ if __name__ == "__main__":
             result = gp_minimize(
                 func=cost_function,  # The objective function to minimize
                 dimensions=space,  # The search space
-                n_calls=15,  # Number of evaluations of the objective function
+                n_calls=18,  # Number of evaluations of the objective function
                 n_random_starts=5,
                 callback=[print_score, stop_callback],  # Number of random starting points
                 random_state=42  # Random seed for reproducibility
