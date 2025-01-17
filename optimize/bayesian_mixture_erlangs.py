@@ -395,7 +395,7 @@ for ind in range(2500):
         result = gp_minimize(
             func=cost_function,  # The objective function to minimize
             dimensions=space,  # The search space
-            n_calls=12,  # Number of evaluations of the objective function
+            n_calls=20,  # Number of evaluations of the objective function
             n_random_starts=5,
             callback=[print_score,stop_callback],  # Number of random starting points
             random_state=42  # Random seed for reproducibility
