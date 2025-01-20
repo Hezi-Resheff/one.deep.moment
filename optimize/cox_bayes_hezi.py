@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
             run_num_tot = np.random.randint(1, 10000000)
 
-            num_moms = np.random.choice([5,10,20])
+            num_moms = np.random.choice([10,20])
             max_val_ph = np.random.choice([20,50,200])
 
             dataset_file = np.random.choice(['cox_df.pkl', 'hyper_df.pkl', 'general_df.pkl'])
