@@ -164,10 +164,10 @@ if __name__ == "__main__":
 
         run_num_tot = np.random.randint(1, 10000000)
 
-        num_moms = np.random.choice([5,10,20])
-        max_val_ph = np.random.choice([20,50,200])
+        num_moms = np.random.choice([5])
+        max_val_ph = np.random.choice([20,50, 200])
 
-        dataset_file = np.random.choice(['cox_df.pkl', 'hyper_df.pkl', 'general_df.pkl'])
+        dataset_file = np.random.choice(['cox_df.pkl']) # , 'hyper_df.pkl', 'general_df.pkl'
 
         df_dat = pkl.load(open(os.path.join(path_ph, dataset_file), 'rb'))
 
@@ -214,8 +214,8 @@ if __name__ == "__main__":
         result = gp_minimize(
             func=cost_function,  # The objective function to minimize
             dimensions=space,  # The search space
-            n_calls=15,  # Number of evaluations of the objective function
-            n_random_starts=5,
+            n_calls=10,  # Number of evaluations of the objective function
+            n_random_starts=3,
             callback=[print_score, stop_callback],  # Number of random starting points
             random_state=42  # Random seed for reproducibility
         )
