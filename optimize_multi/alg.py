@@ -1,0 +1,102 @@
+import torch
+
+MIN_LOSS_EPSILON = 1e-7
+
+
+class MomentMatcherBase(object):
+    def __init__(self, ph_size, n_replica=10, lr=1e-4, num_epochs=1000, lambda_scale=10):
+        self.k = ph_size
+        self.n = n_replica
+        self.lr = lr
+        self.n_epochs = num_epochs
+        self.ls = lambda_scale
+        self.params = None
+        self.fit_info = None
+
+    def fit(self, target_ms):
+        # init
+        self._init()
+        optimizer = torch.optim.Adam(self.params, lr=self.lr)
+
+        # train loop
+        for epoch in range(self.n_epochs):
+            optimizer.zero_grad()
+            loss, extended_loss_info = self._loss(target_ms)
+            loss.backward()
+            optimizer.step()
+
+            losses = extended_loss_info["per_replica"]
+            best_replica_loss = torch.min(losses[~torch.isnan(losses)])
+            still_alive_count = torch.sum(torch.isfinite(losses))
+            if epoch % 100 == 99 or best_replica_loss < MIN_LOSS_EPSILON:
+                print(f"===== Epoch: {epoch} =====")
+                print(f"Overall loss: {loss}")
+                print(f"Still alive: {still_alive_count}")
+                print(f"Best replica: {best_replica_loss}")
+
+            if best_replica_loss < MIN_LOSS_EPSILON:
+                self.fit_info = extended_loss_info
+                break
+
+    @staticmethod
+    def _compute_moments(a, T, n_moments):
+        n, k, _ = T.shape
+        m = []
+        T_in = torch.inverse(T)
+        T_powers = torch.eye(k).expand(n, k, k)
+        signed_factorial = 1.
+        one = torch.ones(k)
+
+        for i in range(1, n_moments+1):
+            signed_factorial *= -i
+            T_powers = torch.matmul(T_powers, T_in)  # now T_powers is T^(-i)
+            current_moment = signed_factorial * torch.einsum('bi,bij,j->b', a, T_powers, one)
+            m.append(current_moment)
+
+        return torch.stack(m).T
+
+    def _loss(self, target_ms):
+        a, T = self._make_phs_from_params()
+        ms = self._compute_moments(a, T, n_moments=len(target_ms))
+        weighted_error = (ms - target_ms) / target_ms
+        per_replica_loss = torch.sum(weighted_error ** 2, dim=1)
+        extended_loss_info = {"per_replica": per_replica_loss.detach()}
+        return torch.nanmean(per_replica_loss), extended_loss_info
+
+
+class GeneralPHMatcher(MomentMatcherBase):
+    def _init(self):
+        ps = torch.randn(self.n, self.k, self.k, requires_grad=True)
+        lambdas = torch.empty(self.n, self.k, requires_grad=True)
+        lambdas.data = torch.rand(self.n, self.k) * self.ls
+        alpha = torch.rand(self.n, self.k, requires_grad=True)
+        self.params = alpha, lambdas, ps
+
+    def _make_phs_from_params(self):
+        alpha, lambdas, ps = self.params
+        a = torch.nn.functional.softmax(alpha, dim=1)
+        ls = lambdas ** 2
+        lambda_rows = ls.unsqueeze(-1).expand(-1, -1, self.k)
+        p = torch.nn.functional.softmax(ps, 2)
+
+        diagonals = -torch.diagonal(p, dim1=1, dim2=2) - 1
+        diagonals_back_to_3D = torch.diag_embed(diagonals)
+
+        T = (p + diagonals_back_to_3D) * lambda_rows
+        return a, T
+
+
+if __name__ == "__main__":
+    m = GeneralPHMatcher(ph_size=10, lambda_scale=10, num_epochs=10000, lr=1e-3, n_replica=1000)
+    m._init()
+
+    alpha, lambdas, ps = m.params
+    a, T = m._make_phs_from_params()
+    ms = m._compute_moments(a, T, n_moments=5)
+    print(ms.shape)
+    print(ms)
+
+    moments = torch.tensor([1.00000012e+00, 1.22453661e+01, 2.52054971e+02, 6.94014597e+03,
+                            2.38889248e+05, 9.86750350e+06, 4.75515602e+08, 2.61887230e+10,
+                            1.62261827e+12, 1.11705848e+14])
+    m.fit(target_ms=moments)
