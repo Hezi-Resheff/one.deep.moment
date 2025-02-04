@@ -59,7 +59,7 @@ class MomentMatcherBase(object):
         a, T = self._make_phs_from_params()
         ms = self._compute_moments(a, T, n_moments=len(target_ms))
         weighted_error = (ms - target_ms) / target_ms
-        per_replica_loss = torch.sum(weighted_error ** 2, dim=1)
+        per_replica_loss = torch.mean(weighted_error ** 2, dim=1)
         extended_loss_info = {"per_replica": per_replica_loss.detach()}
         return torch.nanmean(per_replica_loss), extended_loss_info
 
