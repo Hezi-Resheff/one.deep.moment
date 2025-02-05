@@ -28,14 +28,14 @@ class MomentMatcherBase(object):
             losses = extended_loss_info["per_replica"]
             best_replica_loss = torch.min(losses[~torch.isnan(losses)])
             still_alive_count = torch.sum(torch.isfinite(losses))
-            if epoch % 100 == 99 or best_replica_loss < MIN_LOSS_EPSILON:
+            if epoch % 100 == 99 or best_replica_loss < MIN_LOSS_EPSILON or epoch == self.n_epochs-1:
                 print(f"===== Epoch: {epoch} =====")
                 print(f"Overall loss: {loss}")
                 print(f"Still alive: {still_alive_count}")
                 print(f"Best replica: {best_replica_loss}")
+                self.fit_info = extended_loss_info
 
             if best_replica_loss < MIN_LOSS_EPSILON:
-                self.fit_info = extended_loss_info
                 break
 
     @staticmethod
@@ -99,19 +99,42 @@ class GeneralPHMatcher(MomentMatcherBase):
         return a, T
 
 
+class CoxianPHMatcher(MomentMatcherBase):
+    def __init__(self, ph_size, n_replica=10, lr=1e-4, num_epochs=1000, lambda_scale=10, sort_init=True):
+        super().__init__(ph_size, n_replica, lr, num_epochs, lambda_scale)
+        self.sort_init = sort_init
+
+    def _init(self):
+        lam = torch.rand(self.n, self.k) * self.ls
+        if self.sort_init:
+            lam, _ = lam.sort(dim=1)
+        lambdas = torch.empty(self.n, self.k, requires_grad=True)
+        lambdas.data = lam
+        ps = torch.randn(self.n, self.k-1, requires_grad=True)
+        self.params = lambdas, ps
+
+    def _make_phs_from_params(self):
+        lambdas, ps = self.params
+        ls = lambdas ** 2
+
+        p = torch.sigmoid(ps)
+
+        a = torch.zeros(self.n, self.k)
+        a[:, 0] = 1.
+
+        T = torch.diag_embed(-ls) + torch.diag_embed(p * ls[:, :-1], offset=1)
+
+        return a, T
+
+
 if __name__ == "__main__":
     from optimize.util import moment_analytics, compute_moments
 
     k = 10
 
-    m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=10000, lr=1e-2, n_replica=5000)
+    m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=10000, lr=5e-3, n_replica=5000)
+    # m = CoxianPHMatcher(ph_size=k, lambda_scale=100, num_epochs=10000, lr=5e-4, n_replica=100)
     m._init()
-
-    alpha, lambdas, ps = m.params
-    a, T = m._make_phs_from_params()
-    ms = m._compute_moments(a, T, n_moments=5)
-    print(ms.shape)
-    print(ms)
 
     moments = torch.tensor([1.00000012e+00, 1.22453661e+01, 2.52054971e+02, 6.94014597e+03,
                             2.38889248e+05, 9.86750350e+06, 4.75515602e+08, 2.61887230e+10,
@@ -124,3 +147,5 @@ if __name__ == "__main__":
 
     moment_table = moment_analytics(moments, compute_moments(a, T, k, len(moments)))
     print(moment_table)
+
+
