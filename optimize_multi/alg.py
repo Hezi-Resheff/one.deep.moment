@@ -1,6 +1,6 @@
 import torch
 
-MIN_LOSS_EPSILON = 1e-7
+MIN_LOSS_EPSILON = 1e-8
 
 
 class MomentMatcherBase(object):
@@ -60,8 +60,21 @@ class MomentMatcherBase(object):
         ms = self._compute_moments(a, T, n_moments=len(target_ms))
         weighted_error = (ms - target_ms) / target_ms
         per_replica_loss = torch.mean(weighted_error ** 2, dim=1)
+
+        # Save all loss values
         extended_loss_info = {"per_replica": per_replica_loss.detach()}
-        return torch.nanmean(per_replica_loss), extended_loss_info
+
+        # Compute total loss without nan/inf (dead) replicas
+        mask = ~torch.isnan(per_replica_loss) & ~torch.isinf(per_replica_loss)
+        loss = per_replica_loss[mask].to(torch.float64).mean()
+
+        return loss, extended_loss_info
+
+    def get_best_after_fit(self):
+        all_loss = self.fit_info["per_replica"]
+        best_instance = torch.nan_to_num(all_loss, nan=float('inf')).argmin()
+        a_all, T_all = self._make_phs_from_params()
+        return a_all[best_instance], T_all[best_instance]
 
 
 class GeneralPHMatcher(MomentMatcherBase):
@@ -87,7 +100,11 @@ class GeneralPHMatcher(MomentMatcherBase):
 
 
 if __name__ == "__main__":
-    m = GeneralPHMatcher(ph_size=10, lambda_scale=10, num_epochs=10000, lr=1e-3, n_replica=1000)
+    from optimize.util import moment_analytics, compute_moments
+
+    k = 10
+
+    m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=10000, lr=1e-2, n_replica=5000)
     m._init()
 
     alpha, lambdas, ps = m.params
@@ -100,3 +117,10 @@ if __name__ == "__main__":
                             2.38889248e+05, 9.86750350e+06, 4.75515602e+08, 2.61887230e+10,
                             1.62261827e+12, 1.11705848e+14])
     m.fit(target_ms=moments)
+
+    a, T = m.get_best_after_fit()
+    print(a)
+    print(T)
+
+    moment_table = moment_analytics(moments, compute_moments(a, T, k, len(moments)))
+    print(moment_table)
