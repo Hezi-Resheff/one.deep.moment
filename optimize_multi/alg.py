@@ -1,6 +1,9 @@
 import torch
+import pickle as pkl
+import numpy as np
+import pandas as pd
 
-MIN_LOSS_EPSILON = 1e-8
+MIN_LOSS_EPSILON = 1e-9
 
 
 class MomentMatcherBase(object):
@@ -129,23 +132,56 @@ class CoxianPHMatcher(MomentMatcherBase):
 
 if __name__ == "__main__":
     from optimize.util import moment_analytics, compute_moments
+    df_res = pd.DataFrame([])
+    # Initialize df_res if not already
 
-    k = 10
+    df_res = pd.DataFrame([])
+    # Create column names dynamically
 
-    m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=10000, lr=5e-3, n_replica=5000)
-    # m = CoxianPHMatcher(ph_size=k, lambda_scale=100, num_epochs=10000, lr=5e-4, n_replica=100)
-    m._init()
 
-    moments = torch.tensor([1.00000012e+00, 1.22453661e+01, 2.52054971e+02, 6.94014597e+03,
-                            2.38889248e+05, 9.86750350e+06, 4.75515602e+08, 2.61887230e+10,
-                            1.62261827e+12, 1.11705848e+14])
-    m.fit(target_ms=moments)
+    moms_cols = []
+    num_moms = 10
+    for mom in range(1, num_moms + 1):
+        moms_cols.append('mom_' + str(mom))
 
-    a, T = m.get_best_after_fit()
-    print(a)
-    print(T)
+    df_dat = pkl.load(open('..\optimize\cox_df.pkl', 'rb'))
 
-    moment_table = moment_analytics(moments, compute_moments(a, T, k, len(moments)))
-    print(moment_table)
+    for rand_ind in range(df_dat.shape[0]):
+
+        try:
+            k = 10
+            m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=15000, lr=5e-3, n_replica=5000)
+            # m = CoxianPHMatcher(ph_size=k, lambda_scale=100, num_epochs=10000, lr=5e-3, n_replica=1000)
+            m._init()
+
+            print(rand_ind)
+
+            moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
+            m.fit(target_ms=moments)
+
+            a, T = m.get_best_after_fit()
+            # print(a)
+            # print(T)
+
+            moment_table = moment_analytics(moments, compute_moments(a, T, k, len(moments)))
+            # print(moment_table)
+
+            curr_ind = df_res.shape[0]
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
+
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
+
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
+
+
+            pkl.dump(df_res, open('df_res.pkl', 'wb'))
+
+        except:
+
+            print('bad iteration', rand_ind)
+
 
 

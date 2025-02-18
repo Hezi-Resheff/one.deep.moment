@@ -8,7 +8,7 @@ import pickle as pkl
 import os
 import sys
 # Stop optimization when the loss hits this value
-MIN_LOSS_EPSILON = 1e-7
+MIN_LOSS_EPSILON = 1e-9
 # sys.path.append(os.path.abspath(".."))
 # from utils_sample_ph import *
 
@@ -77,7 +77,7 @@ class CoxianMatcher(object):
                     break
 
             if len(loss_list) > 20000:
-                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.1:
+                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.001:
                     print('########## breaking - stuck in local minumum #########')
                     break
 
@@ -467,20 +467,20 @@ if __name__ == "__main__":
 
 
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    moments = torch.tensor([1.00000012e+00, 1.22453661e+01, 2.52054971e+02, 6.94014597e+03,
-       2.38889248e+05, 9.86750350e+06, 4.75515602e+08, 2.61887230e+10,
-       1.62261827e+12, 1.11705848e+14, 8.45917542e+15, 6.98825671e+17,
-       6.25420106e+19, 6.02780640e+21, 6.22457937e+23, 6.85629407e+25,
-       8.02412798e+27, 9.94328464e+29, 1.30059798e+32, 1.79073993e+34])
+    moments = torch.tensor([1. ,  1.94562829,  5.22796487, 17.05150461, 64.66342612])
 
     print(moments)
     n_moments = len(moments)
-    k = 45
-    num_epochs = 150000
+    k = 50
+    num_epochs = 180000
     ws = moments ** (-1)
-    matcher = MomentMatcher(ms = moments) #CoxianMatcher(ms=moments)
 
+    # matcher = MultiErlangMomentMatcher(ms=moments, ls=[10,7,10,5,4,8,12])
+    # loss, (a, T) = matcher.fit_search_scale(moment_weights=ws, num_epochs=62000, lr=5e-3)
+
+    matcher = CoxianMatcher(ms=moments)
     _, (a, T) = matcher.fit_search_scale(k, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 
     moment_table = moment_analytics(moments, compute_moments(a, T, k, n_moments))
     print(moment_table)
+    pkl.dump((a,T), open('a_T_arrival.pkl', 'wb'))

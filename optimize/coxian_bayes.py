@@ -167,7 +167,7 @@ if __name__ == "__main__":
         num_moms = np.random.choice([5])
         max_val_ph = np.random.choice([20,50, 200])
 
-        dataset_file = np.random.choice(['cox_df.pkl']) # , 'hyper_df.pkl', 'general_df.pkl'
+        dataset_file = np.random.choice(['cox_df.pkl']) # , 'general_df.pkl'
 
         df_dat = pkl.load(open(os.path.join(path_ph, dataset_file), 'rb'))
 
