@@ -135,9 +135,6 @@ if __name__ == "__main__":
     df_res = pd.DataFrame([])
     # Initialize df_res if not already
 
-    df_res = pd.DataFrame([])
-    # Create column names dynamically
-
 
     moms_cols = []
     num_moms = 10
