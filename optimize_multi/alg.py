@@ -174,7 +174,7 @@ if __name__ == "__main__":
                 df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
 
 
-            pkl.dump(df_res, open('df_res.pkl', 'wb'))
+            pkl.dump(df_res, open('df_res_'+str(k) +'.pkl', 'wb'))
 
         except:
 
