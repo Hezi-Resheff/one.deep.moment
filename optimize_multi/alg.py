@@ -1,3 +1,5 @@
+import os.path
+
 import torch
 import pickle as pkl
 import numpy as np
@@ -15,6 +17,8 @@ class MomentMatcherBase(object):
         self.ls = lambda_scale
         self.params = None
         self.fit_info = None
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Starting with device: {self.device}")
 
     def fit(self, target_ms):
         # init
@@ -86,7 +90,7 @@ class GeneralPHMatcher(MomentMatcherBase):
         lambdas = torch.empty(self.n, self.k, requires_grad=True)
         lambdas.data = torch.rand(self.n, self.k) * self.ls
         alpha = torch.rand(self.n, self.k, requires_grad=True)
-        self.params = alpha, lambdas, ps
+        self.params = alpha.to(self.device), lambdas.to(self.device), ps.to(self.device)
 
     def _make_phs_from_params(self):
         alpha, lambdas, ps = self.params
@@ -114,7 +118,7 @@ class CoxianPHMatcher(MomentMatcherBase):
         lambdas = torch.empty(self.n, self.k, requires_grad=True)
         lambdas.data = lam
         ps = torch.randn(self.n, self.k-1, requires_grad=True)
-        self.params = lambdas, ps
+        self.params = lambdas.to(self.device), ps.to(self.device)
 
     def _make_phs_from_params(self):
         lambdas, ps = self.params
@@ -122,7 +126,7 @@ class CoxianPHMatcher(MomentMatcherBase):
 
         p = torch.sigmoid(ps)
 
-        a = torch.zeros(self.n, self.k)
+        a = torch.zeros(self.n, self.k).to(self.device)
         a[:, 0] = 1.
 
         T = torch.diag_embed(-ls) + torch.diag_embed(p * ls[:, :-1], offset=1)
@@ -135,13 +139,12 @@ if __name__ == "__main__":
     df_res = pd.DataFrame([])
     # Initialize df_res if not already
 
-
     moms_cols = []
     num_moms = 10
     for mom in range(1, num_moms + 1):
         moms_cols.append('mom_' + str(mom))
 
-    df_dat = pkl.load(open('..\optimize\cox_df.pkl', 'rb'))
+    df_dat = pkl.load(open(os.path.abspath("../optimize/cox_df.pkl"), 'rb'))
 
     for rand_ind in range(df_dat.shape[0]):
 
@@ -149,7 +152,6 @@ if __name__ == "__main__":
             k = 10
             m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=15000, lr=5e-3, n_replica=5000)
             # m = CoxianPHMatcher(ph_size=k, lambda_scale=100, num_epochs=10000, lr=5e-3, n_replica=1000)
-            m._init()
 
             print(rand_ind)
 
@@ -173,11 +175,9 @@ if __name__ == "__main__":
             for mom in range(1, num_moms + 1):
                 df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
 
-
             pkl.dump(df_res, open('df_res_'+str(k) +'.pkl', 'wb'))
 
         except:
-
             print('bad iteration', rand_ind)
 
 
