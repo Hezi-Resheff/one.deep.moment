@@ -46,13 +46,13 @@ class MomentMatcherBase(object):
                 break
 
     @staticmethod
-    def _compute_moments(a, T, n_moments):
+    def _compute_moments(a, T, n_moments, device):
         n, k, _ = T.shape
         m = []
         T_in = torch.inverse(T)
-        T_powers = torch.eye(k).expand(n, k, k)
+        T_powers = torch.eye(k).expand(n, k, k).to(device)
         signed_factorial = 1.
-        one = torch.ones(k)
+        one = torch.ones(k).to(device)
 
         for i in range(1, n_moments+1):
             signed_factorial *= -i
@@ -64,7 +64,7 @@ class MomentMatcherBase(object):
 
     def _loss(self, target_ms):
         a, T = self._make_phs_from_params()
-        ms = self._compute_moments(a, T, n_moments=len(target_ms))
+        ms = self._compute_moments(a, T, n_moments=len(target_ms), device=self.device)
         weighted_error = (ms - target_ms) / target_ms
         per_replica_loss = torch.mean(weighted_error ** 2, dim=1)
 
