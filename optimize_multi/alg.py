@@ -87,10 +87,15 @@ class MomentMatcherBase(object):
 class GeneralPHMatcher(MomentMatcherBase):
     def _init(self):
         device = self.device
-        ps = torch.randn(self.n, self.k, self.k, requires_grad=True).to(self.device)
-        lambdas = torch.empty(self.n, self.k, requires_grad=True).to(self.device)
+        ps = torch.randn(self.n, self.k, self.k, requires_grad=False).to(self.device)
+        lambdas = torch.empty(self.n, self.k, requires_grad=False).to(self.device)
         lambdas.data = torch.rand(self.n, self.k).to(device) * self.ls
-        alpha = torch.rand(self.n, self.k, requires_grad=True).to(self.device)
+        alpha = torch.rand(self.n, self.k, requires_grad=False).to(self.device)
+
+        ps.requires_grad_(True)
+        lambdas.requires_grad_(True)
+        alpha.requires_grad_(True)
+
         self.params = alpha, lambdas, ps
 
     def _make_phs_from_params(self):
@@ -116,9 +121,11 @@ class CoxianPHMatcher(MomentMatcherBase):
         lam = (torch.rand(self.n, self.k).to(self.device) * self.ls)
         if self.sort_init:
             lam, _ = lam.sort(dim=1)
-        lambdas = torch.empty(self.n, self.k, requires_grad=True).to(self.device)
+        lambdas = torch.empty(self.n, self.k, requires_grad=False).to(self.device)
         lambdas.data = lam
-        ps = torch.randn(self.n, self.k-1, requires_grad=True).to(self.device)
+        ps = torch.randn(self.n, self.k-1, requires_grad=False).to(self.device)
+        lambdas.requires_grad_(True)
+        ps.requires_grad_(True)
         self.params = lambdas, ps
 
     def _make_phs_from_params(self):
