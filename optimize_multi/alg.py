@@ -65,7 +65,7 @@ class MomentMatcherBase(object):
     def _loss(self, target_ms):
         a, T = self._make_phs_from_params()
         ms = self._compute_moments(a, T, n_moments=len(target_ms), device=self.device)
-        weighted_error = (ms - target_ms) / target_ms
+        weighted_error = (ms - target_ms.to(self.device)) / target_ms.to(self.device)
         per_replica_loss = torch.mean(weighted_error ** 2, dim=1)
 
         # Save all loss values
@@ -156,37 +156,37 @@ if __name__ == "__main__":
 
     for rand_ind in range(df_dat.shape[0]):
 
-        try:
-            k = 10
-            m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=15000, lr=5e-3, n_replica=5000)
-            # m = CoxianPHMatcher(ph_size=k, lambda_scale=100, num_epochs=10000, lr=5e-3, n_replica=1000)
 
-            print(rand_ind)
+        k = 10
+        m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=15000, lr=5e-3, n_replica=5000)
+        # m = CoxianPHMatcher(ph_size=k, lambda_scale=100, num_epochs=10000, lr=5e-3, n_replica=1000)
 
-            moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
-            m.fit(target_ms=moments)
+        print(rand_ind)
 
-            a, T = m.get_best_after_fit()
-            # print(a)
-            # print(T)
+        moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
+        m.fit(target_ms=moments)
 
-            moment_table = moment_analytics(moments, compute_moments(a, T, k, len(moments)))
-            # print(moment_table)
+        a, T = m.get_best_after_fit()
+        # print(a)
+        # print(T)
 
-            curr_ind = df_res.shape[0]
-            for mom in range(1, num_moms + 1):
-                df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
+        moment_table = moment_analytics(moments, compute_moments(a, T, k, len(moments)))
+        # print(moment_table)
 
-            for mom in range(1, num_moms + 1):
-                df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
+        curr_ind = df_res.shape[0]
+        for mom in range(1, num_moms + 1):
+            df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
 
-            for mom in range(1, num_moms + 1):
-                df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
+        for mom in range(1, num_moms + 1):
+            df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
 
-            pkl.dump(df_res, open('df_res_'+str(k) +'.pkl', 'wb'))
+        for mom in range(1, num_moms + 1):
+            df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
 
-        except:
-            print('bad iteration', rand_ind)
+        pkl.dump(df_res, open('df_res_'+str(k) +'.pkl', 'wb'))
+
+        # except:
+        #     print('bad iteration', rand_ind)
 
 
 
