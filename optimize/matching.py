@@ -203,7 +203,7 @@ class MultiErlangMomentMatcher(object):
 
         return loss.detach().item(), self.get_ph_mix_erlang(lam, alpha)
 
-    def fit_search_scale(self, num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=50, min_scale=1):
+    def fit_search_scale(self, num_epochs=1000, moment_weights=None, lr=1e-4, max_scale=25, min_scale=5):
         loss = 1
         current_scale = max_scale
 
@@ -467,20 +467,22 @@ if __name__ == "__main__":
 
 
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    moments = torch.tensor([1. ,  1.94562829,  5.22796487, 17.05150461, 64.66342612])
+    moments = torch.tensor([1.00000000e+00, 1.76841773e+00, 4.03513940e+00, 1.14200072e+01,
+       4.09989510e+01, 1.90084346e+02, 1.11890972e+03])
 
     print(moments)
     n_moments = len(moments)
-    k = 50
+    ls = np.array([10, 7, 10, 5, 4, 8, 12, 15,])
+    k = 70 # ls.sum()
     num_epochs = 180000
     ws = moments ** (-1)
 
-    # matcher = MultiErlangMomentMatcher(ms=moments, ls=[10,7,10,5,4,8,12])
-    # loss, (a, T) = matcher.fit_search_scale(moment_weights=ws, num_epochs=62000, lr=5e-3)
+    # matcher = MultiErlangMomentMatcher(ms=moments, ls=ls)
+    # loss, (a, T) = matcher.fit_search_scale(moment_weights=ws, num_epochs=num_epochs, lr=1e-4)
 
     matcher = CoxianMatcher(ms=moments)
     _, (a, T) = matcher.fit_search_scale(k, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 
     moment_table = moment_analytics(moments, compute_moments(a, T, k, n_moments))
     print(moment_table)
-    pkl.dump((a,T), open('a_T_arrival.pkl', 'wb'))
+    pkl.dump((a,T), open('a_T_ser_7.pkl', 'wb'))

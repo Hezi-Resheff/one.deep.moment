@@ -87,10 +87,21 @@ class MomentMatcherBase(object):
 class GeneralPHMatcher(MomentMatcherBase):
     def _init(self):
         device = self.device
-        ps = torch.randn(self.n, self.k, self.k, requires_grad=False).to(self.device)
+
+        a = torch.ones(self.k)
+        qs = torch.distributions.Dirichlet(a).sample((self.n, self.k))
+        ps = torch.log(qs).to(self.device)
+
         lambdas = torch.empty(self.n, self.k, requires_grad=False).to(self.device)
-        lambdas.data = torch.rand(self.n, self.k).to(device) * self.ls
-        alpha = torch.rand(self.n, self.k, requires_grad=False).to(self.device)
+        lambdas.data = torch.rand(self.n, self.k).to(device) ** (.5) # self.ls
+
+        alpha = torch.distributions.Dirichlet(a).sample((self.n, 1)).squeeze(1).to(self.device)
+
+        # calculate 1st moment and normalize lambdas
+        self.params = alpha, lambdas, ps
+        a, T = self. _make_phs_from_params()
+        m1 = self._compute_moments(a, T, n_moments=1, device=device)
+        lambdas.data = lambdas.data * m1**0.5
 
         ps.requires_grad_(True)
         lambdas.requires_grad_(True)
@@ -157,8 +168,8 @@ if __name__ == "__main__":
     for rand_ind in range(df_dat.shape[0]):
 
 
-        k = 10
-        m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=15000, lr=5e-3, n_replica=5000)
+        k = 15
+        m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=15000, lr=5e-3, n_replica=50000)
         # m = CoxianPHMatcher(ph_size=k, lambda_scale=100, num_epochs=10000, lr=5e-3, n_replica=1000)
 
         print(rand_ind)
