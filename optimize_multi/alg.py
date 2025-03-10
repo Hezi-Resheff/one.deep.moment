@@ -85,23 +85,38 @@ class MomentMatcherBase(object):
 
 
 class GeneralPHMatcher(MomentMatcherBase):
+    def __init__(self, ph_size, n_replica=10, lr=1e-4, num_epochs=1000, lambda_scale=10,
+                 normalize_m1=True,
+                 init_drop=0.):
+
+        super().__init__(ph_size, n_replica, lr, num_epochs, lambda_scale)
+        self.normalize_m1 = normalize_m1
+        self.init_drop = init_drop
+
     def _init(self):
         device = self.device
 
-        a = torch.ones(self.k)
-        qs = torch.distributions.Dirichlet(a).sample((self.n, self.k))
+        # sample P uniform on hte n-1 simplex (after the softmax transformation)
+        ones = torch.ones(self.k)
+        qs = torch.distributions.Dirichlet(ones).sample((self.n, self.k))
         ps = torch.log(qs).to(self.device)
 
         lambdas = torch.empty(self.n, self.k, requires_grad=False).to(self.device)
         lambdas.data = torch.rand(self.n, self.k).to(device) ** (.5) # self.ls
 
-        alpha = torch.distributions.Dirichlet(a).sample((self.n, 1)).squeeze(1).to(self.device)
+        alpha = torch.distributions.Dirichlet(ones).sample((self.n, 1)).squeeze(1).to(self.device)
 
         # calculate 1st moment and normalize lambdas
-        self.params = alpha, lambdas, ps
-        a, T = self. _make_phs_from_params()
-        m1 = self._compute_moments(a, T, n_moments=1, device=device)
-        lambdas.data = lambdas.data * m1**0.5
+        if self.normalize_m1:
+            self.params = alpha, lambdas, ps
+            a, T = self. _make_phs_from_params()
+            m1 = self._compute_moments(a, T, n_moments=1, device=device)
+            lambdas.data = lambdas.data * m1**0.5
+
+        # zero out some P values
+        if self.init_drop > 0.:
+            drop_mask = torch.bernoulli(torch.full(ps.shape, self.init_drop))
+            ps[drop_mask == 1] = 0.
 
         ps.requires_grad_(True)
         lambdas.requires_grad_(True)
@@ -167,9 +182,10 @@ if __name__ == "__main__":
 
     for rand_ind in range(df_dat.shape[0]):
 
-
-        k = 15
-        m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=15000, lr=5e-3, n_replica=50000)
+        k = 5
+        m = GeneralPHMatcher(ph_size=k, lambda_scale=10, num_epochs=15000, lr=1e-3, n_replica=10,
+                             normalize_m1=True,
+                             init_drop=.5)
         # m = CoxianPHMatcher(ph_size=k, lambda_scale=100, num_epochs=10000, lr=5e-3, n_replica=1000)
 
         print(rand_ind)
