@@ -222,16 +222,17 @@ if __name__ == "__main__":
         moms_cols.append('mom_' + str(mom))
 
     df_dat = pkl.load(open(os.path.abspath("../optimize/cox_df.pkl"), 'rb'))
-    num_rep = 1000
-    num_epochs  = 50000
+    num_rep = 10000
+    num_epochs  = 80000
+
     for rand_ind in range(df_dat.shape[0]):
 
-        k = 25
-        m = GeneralPHMatcher(ph_size=k, num_epochs=65000, lr=5e-3, n_replica=100000, lr_gamma=.9, normalize_m1=True,
-                            init_drop='uniform')
+        k = 50
+        # m = GeneralPHMatcher(ph_size=k, num_epochs=65000, lr=5e-3, n_replica=100000, lr_gamma=.9, normalize_m1=True,
+        #                     init_drop='uniform')
         now = time.time()
-        # m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
-        type_ph = 'general'
+        m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
+        type_ph = 'cox'
         print(rand_ind)
 
         moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])

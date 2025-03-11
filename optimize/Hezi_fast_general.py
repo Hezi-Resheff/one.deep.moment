@@ -255,6 +255,11 @@ if __name__ == "__main__":
         print('runtime is: ', runtime)
 
         df_res.loc[curr_ind,'run_time'] = runtime
+        df_res.loc[curr_ind, 'k'] = k
+        df_res.loc[curr_ind, 'type_ph'] = type_ph
+        df_res.loc[curr_ind, 'type_test_ph'] = 'cox'
+        df_res.loc[curr_ind, 'num_rep'] = num_rep
+        df_res.loc[curr_ind, 'num_epochs'] = num_epochs
 
         for mom in range(1, num_moms + 1):
             df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
