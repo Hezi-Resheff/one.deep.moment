@@ -222,12 +222,12 @@ if __name__ == "__main__":
         moms_cols.append('mom_' + str(mom))
 
     df_dat = pkl.load(open(os.path.abspath("../optimize/cox_df.pkl"), 'rb'))
-    num_rep = 1000
-    num_epochs  = 50000
+    num_rep = 100000
+    num_epochs  = 80000
     for rand_ind in range(df_dat.shape[0]):
 
-        k = 25
-        m = GeneralPHMatcher(ph_size=k, num_epochs=65000, lr=5e-3, n_replica=100000, lr_gamma=.9, normalize_m1=True,
+        k = 20
+        m = GeneralPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, n_replica=num_rep, lr_gamma=.9, normalize_m1=True,
                             init_drop='uniform')
         now = time.time()
         # m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
@@ -246,7 +246,7 @@ if __name__ == "__main__":
         # print(T)
 
         moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
-        # print(moment_table)
+        print(moment_table)
 
         curr_ind = df_res.shape[0]
 

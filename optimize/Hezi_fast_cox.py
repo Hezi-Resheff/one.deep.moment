@@ -223,16 +223,15 @@ if __name__ == "__main__":
 
     df_dat = pkl.load(open(os.path.abspath("../optimize/cox_df.pkl"), 'rb'))
     num_rep = 1000
-    num_epochs  = 50000
+    num_epochs  = 80000
     for rand_ind in range(df_dat.shape[0]):
 
-        k = 25
-        m = GeneralPHMatcher(ph_size=k, num_epochs=65000, lr=5e-3, n_replica=100000, lr_gamma=.9, normalize_m1=True,
-                            init_drop='uniform')
+        k = 20
+        # m = GeneralPHMatcher(ph_size=k, num_epochs=65000, lr=5e-3, n_replica=100000, lr_gamma=.9, normalize_m1=True,
+        #                     init_drop='uniform')
         now = time.time()
-        # m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
-        type_ph = 'general'
-        print(rand_ind)
+        m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
+        type_ph = 'cox'
 
         moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
         m.fit(target_ms=moments, stop=[{"epoch": 100, "keep_fraction": .5},
@@ -242,11 +241,10 @@ if __name__ == "__main__":
                                        ])
 
         a, T = m.get_best_after_fit()
-        # print(a)
-        # print(T)
+
 
         moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
-        # print(moment_table)
+        print(moment_table)
 
         curr_ind = df_res.shape[0]
 
@@ -255,6 +253,14 @@ if __name__ == "__main__":
         print('runtime is: ', runtime)
 
         df_res.loc[curr_ind,'run_time'] = runtime
+        df_res.loc[curr_ind, 'k'] = k
+        df_res.loc[curr_ind, 'type_ph'] = type_ph
+        df_res.loc[curr_ind, 'type_test_ph'] = 'cox'
+        df_res.loc[curr_ind, 'num_rep'] = num_rep
+        df_res.loc[curr_ind, 'num_epochs'] = num_epochs
+
+
+
 
         for mom in range(1, num_moms + 1):
             df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
