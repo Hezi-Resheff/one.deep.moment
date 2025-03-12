@@ -217,7 +217,7 @@ if __name__ == "__main__":
     # Initialize df_res if not already
 
     moms_cols = []
-    num_moms = 10
+    num_moms = 20
     for mom in range(1, num_moms + 1):
         moms_cols.append('mom_' + str(mom))
 
@@ -262,6 +262,7 @@ if __name__ == "__main__":
             df_res.loc[curr_ind, 'type_test_ph'] = 'cox'
             df_res.loc[curr_ind, 'num_rep'] = num_rep
             df_res.loc[curr_ind, 'num_epochs'] = num_epochs
+            df_res.loc[curr_ind, 'num_moms'] = num_moms
 
             for mom in range(1, num_moms + 1):
                 df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
