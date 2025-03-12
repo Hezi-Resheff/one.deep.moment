@@ -226,57 +226,58 @@ if __name__ == "__main__":
     num_epochs  = 80000
     for rand_ind in range(df_dat.shape[0]):
 
-        k = 20
-        # m = GeneralPHMatcher(ph_size=k, num_epochs=65000, lr=5e-3, n_replica=100000, lr_gamma=.9, normalize_m1=True,
-        #                     init_drop='uniform')
-        now = time.time()
-        m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
-        type_ph = 'cox'
+        try:
+            k = 20
+            # m = GeneralPHMatcher(ph_size=k, num_epochs=65000, lr=5e-3, n_replica=100000, lr_gamma=.9, normalize_m1=True,
+            #                     init_drop='uniform')
+            now = time.time()
+            m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
+            type_ph = 'cox'
 
-        moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
-        m.fit(target_ms=moments, stop=[{"epoch": 100, "keep_fraction": .5},
-                                       {"epoch": 500, "keep_fraction": .1},
-                                       {"epoch": 5000, "keep_fraction": .1},
-                                       {"epoch": 10000, "keep_fraction": .1}
-                                       ])
+            moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
+            m.fit(target_ms=moments, stop=[{"epoch": 100, "keep_fraction": .5},
+                                           {"epoch": 500, "keep_fraction": .1},
+                                           {"epoch": 5000, "keep_fraction": .1},
+                                           {"epoch": 10000, "keep_fraction": .1}
+                                           ])
 
-        a, T = m.get_best_after_fit()
-
-
-        moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
-        print(moment_table)
-
-        curr_ind = df_res.shape[0]
-
-        end = time.time()
-        runtime = end-now
-        print('runtime is: ', runtime)
-
-        df_res.loc[curr_ind,'run_time'] = runtime
-        df_res.loc[curr_ind, 'k'] = k
-        df_res.loc[curr_ind, 'type_ph'] = type_ph
-        df_res.loc[curr_ind, 'type_test_ph'] = 'cox'
-        df_res.loc[curr_ind, 'num_rep'] = num_rep
-        df_res.loc[curr_ind, 'num_epochs'] = num_epochs
+            a, T = m.get_best_after_fit()
 
 
+            moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
+            print(moment_table)
+
+            curr_ind = df_res.shape[0]
+
+            end = time.time()
+            runtime = end-now
+            print('runtime is: ', runtime)
+
+            df_res.loc[curr_ind,'run_time'] = runtime
+            df_res.loc[curr_ind, 'k'] = k
+            df_res.loc[curr_ind, 'type_ph'] = type_ph
+            df_res.loc[curr_ind, 'type_test_ph'] = 'cox'
+            df_res.loc[curr_ind, 'num_rep'] = num_rep
+            df_res.loc[curr_ind, 'num_epochs'] = num_epochs
 
 
-        for mom in range(1, num_moms + 1):
-            df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
-
-        for mom in range(1, num_moms + 1):
-            df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
-
-        for mom in range(1, num_moms + 1):
-            df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
 
 
-        file_name  = 'df_res_type_ph_'+type_ph + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
-        pkl.dump(df_res, open(file_name, 'wb'))
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
 
-        # except:
-        #     print('bad iteration', rand_ind)
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
+
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
+
+
+            file_name  = 'df_res_type_ph_'+type_ph + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
+            pkl.dump(df_res, open(file_name, 'wb'))
+
+        except:
+            print('bad iteration', rand_ind)
 
 
 
