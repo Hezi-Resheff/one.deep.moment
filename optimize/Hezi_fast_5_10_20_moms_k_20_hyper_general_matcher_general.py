@@ -213,72 +213,78 @@ class CoxianPHMatcher(MomentMatcherBase):
 
 if __name__ == "__main__":
     from optimize.util import moment_analytics, compute_moments
-    df_res = pd.DataFrame([])
-    # Initialize df_res if not already
 
-    moms_cols = []
-    num_moms = 20
-    for mom in range(1, num_moms + 1):
-        moms_cols.append('mom_' + str(mom))
 
-    df_dat = pkl.load(open(os.path.abspath("../optimize/cox_df.pkl"), 'rb'))
-    num_rep = 20000
-    num_epochs  = 100000
+    for num_moms in [5, 10,20]:
+        for dataset in ['hyper_df.pkl', 'general_df.pkl']:
 
-    for rand_ind in range(df_dat.shape[0]):
+            df_dat = pkl.load(open(os.path.abspath("../optimize/" +dataset), 'rb'))
+            print(df_dat.shape)
 
-        try:
-            k = 50
-            # m = GeneralPHMatcher(ph_size=k, num_epochs=65000, lr=5e-3, n_replica=100000, lr_gamma=.9, normalize_m1=True,
-            #                     init_drop='uniform')
-            now = time.time()
-            m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
-            type_ph = 'cox'
-            print(rand_ind)
+            df_res = pd.DataFrame([])
+            # Initialize df_res if not already
 
-            moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
-            m.fit(target_ms=moments, stop=[{"epoch": 100, "keep_fraction": .5},
-                                           {"epoch": 500, "keep_fraction": .1},
-                                           {"epoch": 5000, "keep_fraction": .1},
-                                           {"epoch": 10000, "keep_fraction": .1}
-                                           ])
-
-            a, T = m.get_best_after_fit()
-            # print(a)
-            # print(T)
-
-            moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
-            # print(moment_table)
-
-            curr_ind = df_res.shape[0]
-
-            end = time.time()
-            runtime = end-now
-            print('runtime is: ', runtime)
-
-            df_res.loc[curr_ind,'run_time'] = runtime
-            df_res.loc[curr_ind, 'k'] = k
-            df_res.loc[curr_ind, 'type_ph'] = type_ph
-            df_res.loc[curr_ind, 'type_test_ph'] = 'cox'
-            df_res.loc[curr_ind, 'num_rep'] = num_rep
-            df_res.loc[curr_ind, 'num_epochs'] = num_epochs
-            df_res.loc[curr_ind, 'num_moms'] = num_moms
-
+            moms_cols = []
             for mom in range(1, num_moms + 1):
-                df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
-
-            for mom in range(1, num_moms + 1):
-                df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
-
-            for mom in range(1, num_moms + 1):
-                df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
+                moms_cols.append('mom_' + str(mom))
 
 
-            file_name  = 'df_res_type_ph_'+type_ph + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
-            pkl.dump(df_res, open(file_name, 'wb'))
+            num_rep = 100000
+            num_epochs  = 80000
+            for rand_ind in range(df_dat.shape[0]):
 
-        except:
-            print('bad iteration', rand_ind)
+                try:
+                    k = 20
+                    m = GeneralPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, n_replica=num_rep, lr_gamma=.9, normalize_m1=True,
+                                        init_drop='uniform')
+                    now = time.time()
+                    # m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
+                    type_ph = 'general'
+                    print(rand_ind)
+
+                    moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
+                    m.fit(target_ms=moments, stop=[{"epoch": 100, "keep_fraction": .5},
+                                                   {"epoch": 500, "keep_fraction": .1},
+                                                   {"epoch": 5000, "keep_fraction": .1},
+                                                   {"epoch": 10000, "keep_fraction": .1}
+                                                   ])
+
+                    a, T = m.get_best_after_fit()
+                    # print(a)
+                    # print(T)
+
+                    moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
+                    print(moment_table)
+
+                    curr_ind = df_res.shape[0]
+
+                    end = time.time()
+                    runtime = end-now
+                    print('runtime is: ', runtime)
+
+                    df_res.loc[curr_ind,'run_time'] = runtime
+                    df_res.loc[curr_ind, 'k'] = k
+                    df_res.loc[curr_ind, 'type_ph'] = type_ph
+                    df_res.loc[curr_ind, 'type_test_ph'] = dataset
+                    df_res.loc[curr_ind, 'num_rep'] = num_rep
+                    df_res.loc[curr_ind, 'num_epochs'] = num_epochs
+                    df_res.loc[curr_ind, 'num_moms'] = num_moms
+
+                    for mom in range(1, num_moms + 1):
+                        df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
+
+                    for mom in range(1, num_moms + 1):
+                        df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
+
+                    for mom in range(1, num_moms + 1):
+                        df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
+
+
+                    file_name  = 'df_res_type_ph_'+type_ph + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
+                    pkl.dump(df_res, open(file_name, 'wb'))
+
+                except:
+                    print('bad iteration', rand_ind)
 
 
 
