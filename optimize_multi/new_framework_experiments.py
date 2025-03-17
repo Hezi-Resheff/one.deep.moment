@@ -4,6 +4,7 @@ import pickle as pkl
 import numpy as np
 import pandas as pd
 import time
+
 MIN_LOSS_EPSILON = 1e-9
 
 
@@ -40,7 +41,7 @@ class MomentMatcherBase(object):
             if epoch % 1000 == 999:
                 scheduler.step()
 
-            if epoch % 1000 == 999 or best_replica_loss < MIN_LOSS_EPSILON or epoch == self.n_epochs-1:
+            if epoch % 1000 == 999 or best_replica_loss < MIN_LOSS_EPSILON or epoch == self.n_epochs - 1:
                 print(f"===== Epoch: {epoch} =====")
                 print(f"Current Learning Rate: {optimizer.param_groups[0]['lr']}")
                 print(f"Overall loss: {loss}")
@@ -57,11 +58,11 @@ class MomentMatcherBase(object):
                         # structure: {"when":epoch, "keep_fraction": num}
                         n_keep = int(level["keep_fraction"] * self.n)
                         ix_keep = torch.argsort(losses)[:n_keep]
-                        self.params = tuple(el[ix_keep].clone().detach().to(self.device).requires_grad_(True) for el in self.params)
+                        self.params = tuple(
+                            el[ix_keep].clone().detach().to(self.device).requires_grad_(True) for el in self.params)
                         self.n = self.params[0].shape[0]
                         optimizer = torch.optim.Adam(self.params, lr=self.lr)
                         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.lr_gamma)
-
 
     @staticmethod
     def _compute_moments(a, T, n_moments, device):
@@ -72,7 +73,7 @@ class MomentMatcherBase(object):
         signed_factorial = 1.
         one = torch.ones(k).to(device)
 
-        for i in range(1, n_moments+1):
+        for i in range(1, n_moments + 1):
             signed_factorial *= -i
             T_powers = torch.matmul(T_powers, T_in)  # now T_powers is T^(-i)
             current_moment = signed_factorial * torch.einsum('bi,bij,j->b', a, T_powers, one)
@@ -121,16 +122,16 @@ class GeneralPHMatcher(MomentMatcherBase):
         ps = torch.log(qs).to(self.device)
 
         lambdas = torch.empty(self.n, self.k, requires_grad=False).to(self.device)
-        lambdas.data = torch.rand(self.n, self.k).to(device) ** (.5) # self.ls
+        lambdas.data = torch.rand(self.n, self.k).to(device) ** (.5)  # self.ls
 
         alpha = torch.distributions.Dirichlet(ones).sample((self.n, 1)).squeeze(1).to(self.device)
 
         # calculate 1st moment and normalize lambdas
         if self.normalize_m1:
             self.params = alpha, lambdas, ps
-            a, T = self. _make_phs_from_params()
+            a, T = self._make_phs_from_params()
             m1 = self._compute_moments(a, T, n_moments=1, device=device)
-            lambdas.data = lambdas.data * m1**0.5
+            lambdas.data = lambdas.data * m1 ** 0.5
 
         # zero out some P values
         if self.init_drop is not None:
@@ -141,7 +142,7 @@ class GeneralPHMatcher(MomentMatcherBase):
                 drop_mask = torch.empty(self.n, self.k, self.k)
 
                 for i in range(self.n):
-                    sub_mask = torch.bernoulli(torch.full((k,k), drop_prob[i]))
+                    sub_mask = torch.bernoulli(torch.full((k, k), drop_prob[i]))
                     drop_mask[i] = sub_mask
             else:
                 # all use the same proportion of drop
@@ -185,7 +186,7 @@ class CoxianPHMatcher(MomentMatcherBase):
         lambdas = torch.empty(self.n, self.k, requires_grad=False).to(self.device)
         lambdas.data = lam
 
-        ps = torch.randn(self.n, self.k-1, requires_grad=False).to(self.device)
+        ps = torch.randn(self.n, self.k - 1, requires_grad=False).to(self.device)
 
         if self.normalize_m1:
             self.params = lambdas, ps
@@ -220,34 +221,34 @@ if __name__ == "__main__":
     ### 3. Number of zeros in General PH generating matrix.
     ### 4. LR
 
+    df_res = pd.DataFrame([])
 
-    init_drop = [0.1,0.5,0.9,'uniform']
+    init_drop_list = [0.1, 0.5, 0.9, 'uniform']
+    num_moms = 5
+    dataset = 'hyper_df.pkl'
 
-
-
-    for num_moms in [5, 10,20]:
-        for dataset in [ 'general_df.pkl',  'hyper_df.pkl', ]:
-
-            df_dat = pkl.load(open(os.path.abspath("../optimize/" +dataset), 'rb'))
+    LR_list = [5e-2 , 5e-3, 5e-4]
+    for init_drop in init_drop_list:
+        for lr in LR_list:
+            df_dat = pkl.load(open(os.path.abspath("../optimize/" + dataset), 'rb'))
             print(df_dat.shape)
 
-            df_res = pd.DataFrame([])
+
             # Initialize df_res if not already
 
             moms_cols = []
             for mom in range(1, num_moms + 1):
                 moms_cols.append('mom_' + str(mom))
 
-
-
-            num_rep = 20000
-            num_epochs  = 80000
-            for rand_ind in range(df_dat.shape[0]):
+            num_rep = 50000
+            num_epochs = 100000
+            for rand_ind in range(1,2): #df_dat.shape[0]
 
                 try:
                     k = 20
-                    m = GeneralPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, n_replica=num_rep, lr_gamma=.9, normalize_m1=True,
-                                        init_drop='uniform')
+                    m = GeneralPHMatcher(ph_size=k, num_epochs=num_epochs, lr=lr, n_replica=num_rep, lr_gamma=.9,
+                                         normalize_m1=True,
+                                         init_drop=init_drop)
                     now = time.time()
                     # m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=.9, n_replica=num_rep)
                     type_ph = 'general'
@@ -260,8 +261,7 @@ if __name__ == "__main__":
                                                    ])
 
                     a, T = m.get_best_after_fit()
-                    # print(a)
-                    # print(T)
+
 
                     moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
                     print(moment_table)
@@ -269,16 +269,18 @@ if __name__ == "__main__":
                     curr_ind = df_res.shape[0]
 
                     end = time.time()
-                    runtime = end-now
+                    runtime = end - now
                     print('runtime is: ', runtime)
 
-                    df_res.loc[curr_ind,'run_time'] = runtime
+                    df_res.loc[curr_ind, 'run_time'] = runtime
                     df_res.loc[curr_ind, 'k'] = k
                     df_res.loc[curr_ind, 'type_ph'] = type_ph
                     df_res.loc[curr_ind, 'type_test_ph'] = dataset
                     df_res.loc[curr_ind, 'num_rep'] = num_rep
                     df_res.loc[curr_ind, 'num_epochs'] = num_epochs
                     df_res.loc[curr_ind, 'num_moms'] = num_moms
+                    df_res.loc[curr_ind, 'LR'] = lr
+                    df_res.loc[curr_ind, 'init_drop'] = init_drop
 
                     for mom in range(1, num_moms + 1):
                         df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
@@ -289,8 +291,8 @@ if __name__ == "__main__":
                     for mom in range(1, num_moms + 1):
                         df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
 
-
-                    file_name  = 'df_res_type_ph_'+type_ph + '_nummoms_' +str(num_moms)+'_testset_' + dataset + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
+                    file_name = 'num_2_df_res_type_ph_' + type_ph + '_size_' + str(k) + '_numrepli_' + str(
+                        num_rep) + '_num_epochs_' + str(num_epochs) + '.pkl'
                     pkl.dump(df_res, open(file_name, 'wb'))
 
                 except:
