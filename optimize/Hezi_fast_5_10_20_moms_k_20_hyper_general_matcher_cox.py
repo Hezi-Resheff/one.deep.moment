@@ -225,8 +225,8 @@ if __name__ == "__main__":
 
 
 
-    for num_moms in [5, 10,20]:
-        for dataset in [ 'general_df.pkl',  'hyper_df.pkl', ]:
+    for num_moms in [ 10,20, 5]:
+        for dataset in [  'hyper_df.pkl', 'general_df.pkl', ]:
 
             df_dat = pkl.load(open(os.path.abspath("../optimize/" +dataset), 'rb'))
             print(df_dat.shape)
