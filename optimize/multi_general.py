@@ -220,7 +220,7 @@ def get_settings():
 
     num_moms = random.choice([5, 10,20])
 
-    dataset = random.choice(['hyper_df.pkl', 'general_df.pkl', 'cox_df.pkl'])
+    dataset = random.choice(['df_cox.csv', 'df_general.csv', 'df_hyper.csv'])
 
     lr_gamma = random.choice([0.9,0.95,0.99])
 
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     print(init_drop, num_moms, dataset, lr_gamma, type_ph, k, num_rep)
 
 
-    df_dat = pkl.load(open(os.path.abspath("../optimize/" +dataset), 'rb'))
+    df_dat =  pd.read_csv(os.path.abspath("../optimize_multi/" +dataset))  #pkl.load(open(os.path.abspath("../optimize/" +dataset), 'rb'))
     print(df_dat.shape)
 
     df_res = pd.DataFrame([])
@@ -333,7 +333,7 @@ if __name__ == "__main__":
 
             file_name  = ('model_num_' + str(rand_model) +  'df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +
                           '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'
-                          +str(num_moms)+'_testset_' + dataset + '_size_'+str(k) + '_numrepli_'
+                          +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'
                           +str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl')
 
             dump_path = '/scratch/eliransc/deep_moment_results'
