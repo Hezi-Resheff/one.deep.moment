@@ -186,7 +186,7 @@ class CoxianPHMatcher(MomentMatcherBase):
         lambdas.data = lam
 
         ps = torch.randn(self.n, self.k-1, requires_grad=False).to(self.device)
-
+        
         if self.normalize_m1:
             self.params = lambdas, ps
             a, T = self._make_phs_from_params()
@@ -211,7 +211,72 @@ class CoxianPHMatcher(MomentMatcherBase):
         return a, T
 
 
+class HyperErlangMatcher(MomentMatcherBase):
+    def __init__(self, block_sizes, n_replica=10, lr=1e-4, num_epochs=1000, lr_gamma=.9, sort_init=True, normalize_m1=True):
+        super().__init__(sum(block_sizes), n_replica, lr, num_epochs, lr_gamma)
+        self.block_sizes = block_sizes
+        self.n_blocks = len(block_sizes) 
+        self.sort_init = sort_init
+        self.normalize_m1 = normalize_m1
+
+    def _init(self):
+        device = self.device
+        
+        lam = torch.rand(self.n, self.n_blocks).to(self.device)
+
+        if self.sort_init:
+            lam, _ = lam.sort(dim=1)
+
+        lambdas = torch.empty(self.n, self.n_blocks, requires_grad=False).to(self.device)
+        lambdas.data = lam
+
+        ps = torch.randn(self.n, self.n_blocks, requires_grad=False).to(self.device)
+
+        ones = torch.ones(self.n_blocks).to(self.device)   
+        alpha = torch.distributions.Dirichlet(ones).sample((self.n, 1)).squeeze(1).to(self.device)
+
+        if self.normalize_m1:
+            self.params = alpha, lambdas, ps
+            a, T = self._make_phs_from_params()
+            m1 = self._compute_moments(a, T, n_moments=1, device=device)
+            lambdas.data = lambdas.data * m1 ** 0.5
+
+        lambdas.requires_grad_(True)
+        ps.requires_grad_(True)
+        alpha.requires_grad_(True)
+        self.params = alpha, lambdas, ps
+
+    def _make_phs_from_params(self):
+        alpha, lambdas, ps = self.params
+        
+        
+        # Make a by softmax and adding in zeros 
+        a = torch.nn.functional.softmax(alpha, dim=1)
+        aa = torch.zeros(self.n, self.k)
+        cuma = torch.cumsum(torch.tensor(self.block_sizes), dim=0) 
+
+        for i in range(self.n_blocks):
+            aa[:, cuma[i]-self.block_sizes[i]] = a[:, i]
+            
+        
+        # lambda and ps are repeated according to block sizes
+        ls = torch.cat([lambdas[:, [i]].repeat(1, bs) for i, bs in enumerate(self.block_sizes)], dim=1) ** 2
+        ps = torch.cat([ps[:, [i]].repeat(1, bs) for i, bs in enumerate(self.block_sizes)], dim=1)
+        ps = torch.sigmoid(ps)
+
+        T = torch.diag_embed(-ls) + torch.diag_embed(ps[:, :-1] * ls[:, :-1], offset=1)
+        
+        return aa, T 
+        
+
 if __name__ == "__main__":
+
+    m = HyperErlangMatcher(block_sizes=[2, 3], n_replica=50, num_epochs=100000)
+    moms = torch.rand(5)
+    m.fit(moms)
+
+    """
+    
     from optimize.util import moment_analytics, compute_moments
     df_res = pd.DataFrame([])
     # Initialize df_res if not already
@@ -280,5 +345,5 @@ if __name__ == "__main__":
         except:
             print('bad iteration', rand_ind)
 
-
+        """
 
