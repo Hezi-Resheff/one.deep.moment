@@ -337,7 +337,7 @@ if __name__ == "__main__":
                       +str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl')
 
         dump_path = '/scratch/eliransc/deep_moment_results'
-        pkl.dump(os.path.join(dump_path ,df_res), open(file_name, 'wb'))
+        pkl.dump( df_res, open(os.path.join(dump_path,file_name), 'wb'))
 
 
         # except:
