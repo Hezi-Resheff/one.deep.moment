@@ -326,7 +326,9 @@ if __name__ == "__main__":
                           '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'
                           +str(num_moms)+'_testset_' + dataset + '_size_'+str(k) + '_numrepli_'
                           +str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl')
-            pkl.dump(df_res, open(file_name, 'wb'))
+
+            dump_path = '/scratch/eliransc/deep_moment_results'
+            pkl.dump(os.path.join(dump_path ,df_res), open(file_name, 'wb'))
 
         except:
             print('bad iteration', rand_ind)
