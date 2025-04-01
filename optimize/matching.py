@@ -445,7 +445,8 @@ if __name__ == "__main__":
     def stuff_eliran_was_running():
 
         ms = get_feasible_moments(original_size=100, n=10)
-        ms = torch.tensor([1, 1.226187, 1.699542, 2.571434, 4.188616, 7.312320e+00, 1.367149e+01])
+
+        ms = torch.tensor([1.00000000e+00, 1.76841773e+00, 4.03513940e+00, 1.14200072e+01])
         ws = ms ** (-1)
 
         matcher = MomentMatcher(ms)
@@ -467,12 +468,12 @@ if __name__ == "__main__":
 
 
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    moments = torch.tensor([1.00000000e+00, 1.76841773e+00, 4.03513940e+00, 1.14200072e+01,
-       4.09989510e+01, 1.90084346e+02, 1.11890972e+03])
+    moments = torch.tensor([1.00000000e+00, 1.47061443e+00, 2.54121794e+00, 5.20548538e+00,
+       1.35082311e+01, 4.73915333e+01, 2.23485171e+02])
 
     print(moments)
     n_moments = len(moments)
-    ls = np.array([10, 7, 10, 5, 4, 8, 12, 15,])
+    ls = np.array([10, 7, 10, 5, 4, 8, 12, 15])
     k = 70 # ls.sum()
     num_epochs = 180000
     ws = moments ** (-1)
@@ -485,4 +486,4 @@ if __name__ == "__main__":
 
     moment_table = moment_analytics(moments, compute_moments(a, T, k, n_moments))
     print(moment_table)
-    pkl.dump((a,T), open('a_T_ser_7.pkl', 'wb'))
+    pkl.dump((a,T), open('a_T_Arrival_7.pkl', 'wb'))
