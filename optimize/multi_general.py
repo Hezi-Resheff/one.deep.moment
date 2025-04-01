@@ -239,7 +239,16 @@ def get_settings():
 
 
 if __name__ == "__main__":
-    from optimize.util import moment_analytics, compute_moments
+    try:
+        from optimize.util import moment_analytics, compute_moments
+    except:
+        pass
+    try:
+        from util import moment_analytics, compute_moments
+
+    except:
+        pass
+
 
     ## Setup list:
     ### 1. Number of initial guesses.
