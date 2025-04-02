@@ -474,7 +474,7 @@ if __name__ == "__main__":
     print(moments)
     n_moments = len(moments)
     ls = np.array([10, 7, 10, 5, 4, 8, 12, 15])
-    k = 70 # ls.sum()
+    k = 63 # ls.sum()
     num_epochs = 180000
     ws = moments ** (-1)
 
@@ -486,4 +486,4 @@ if __name__ == "__main__":
 
     moment_table = moment_analytics(moments, compute_moments(a, T, k, n_moments))
     print(moment_table)
-    pkl.dump((a,T), open('a_T_Arrival_7.pkl', 'wb'))
+    pkl.dump((a,T), open('a_T_Arrival_7_a.pkl', 'wb'))
