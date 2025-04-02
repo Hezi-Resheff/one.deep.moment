@@ -76,10 +76,10 @@ class CoxianMatcher(object):
                     print('########## breaking - loss is too big #########')
                     break
 
-            if len(loss_list) > 20000:
-                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.001:
-                    print('########## breaking - stuck in local minumum #########')
-                    break
+            # if len(loss_list) > 20000:
+            #     if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.0001:
+            #         print('########## breaking - stuck in local minumum #########')
+            #         break
 
             loss.backward()
             optimizer.step()
@@ -179,10 +179,10 @@ class MultiErlangMomentMatcher(object):
                     print('########## breaking - loss is too big #########')
                     break
 
-            if len(loss_list) > 20000:
-                if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
-                    print('########## breaking - stuck in local minumum #########')
-                    break
+            # if len(loss_list) > 20000:
+            #     if 100*np.abs((loss_list[-15000]-loss.item())/loss.item()) < 0.01:
+            #         print('########## breaking - stuck in local minumum #########')
+            #         break
 
             elif loss < MIN_LOSS_EPSILON*10:
                 lr = 1e-5
@@ -356,10 +356,10 @@ class MomentMatcher(object):
                     break
 
             elif len(loss_history) > 40000:
-                if 100*np.abs((loss_history[-35000]-loss.item())/loss.item()) < 0.01:
-                    print('########## breaking - stuck in local minumum #########')
-                    break
-                elif loss.item() > 10e1:
+                # if 100*np.abs((loss_history[-35000]-loss.item())/loss.item()) < 0.01:
+                #     print('########## breaking - stuck in local minumum #########')
+                #     break
+                if loss.item() > 10e1:
                     print('########## breaking - loss is too big #########')
                     break
 
@@ -468,22 +468,21 @@ if __name__ == "__main__":
 
 
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    moments = torch.tensor([1.00000000e+00, 1.47061443e+00, 2.54121794e+00, 5.20548538e+00,
-       1.35082311e+01, 4.73915333e+01, 2.23485171e+02])
+    moments = torch.tensor([1.00000000e+00, 1.76841773e+00, 4.03513940e+00, 1.14200072e+01])
 
     print(moments)
     n_moments = len(moments)
-    ls = np.array([10, 7, 10, 5, 4, 8, 12, 15])
-    k = 63 # ls.sum()
-    num_epochs = 180000
+    ls = np.array([10,10,10,10,10,10,10])
+    k = 68 #ls.sum()
+    num_epochs = 280000
     ws = moments ** (-1)
 
     # matcher = MultiErlangMomentMatcher(ms=moments, ls=ls)
-    # loss, (a, T) = matcher.fit_search_scale(moment_weights=ws, num_epochs=num_epochs, lr=1e-4)
+    # _, (a, T) = matcher.fit_search_scale(moment_weights=ws, num_epochs=num_epochs, lr=1e-4)
 
     matcher = CoxianMatcher(ms=moments)
     _, (a, T) = matcher.fit_search_scale(k, num_epochs=num_epochs, moment_weights=ws, lr=1e-4)
 
     moment_table = moment_analytics(moments, compute_moments(a, T, k, n_moments))
     print(moment_table)
-    pkl.dump((a,T), open('a_T_Arrival_7_a.pkl', 'wb'))
+    pkl.dump((a,T), open('a_T_ser_4.pkl', 'wb'))

@@ -279,67 +279,67 @@ if __name__ == "__main__":
 
         rand_ind = np.random.randint(df_dat.shape[0])
 
-        # try:
+        try:
 
-        if type_ph == 'general':
+            if type_ph == 'general':
 
-            m = GeneralPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, n_replica=num_rep, lr_gamma=lr_gamma, normalize_m1=True,
-                                init_drop='uniform')
-        elif type_ph == 'cox':
+                m = GeneralPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, n_replica=num_rep, lr_gamma=lr_gamma, normalize_m1=True,
+                                    init_drop='uniform')
+            elif type_ph == 'cox':
 
-            m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=lr_gamma, n_replica=num_rep)
+                m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=lr_gamma, n_replica=num_rep)
 
-        print(rand_ind)
+            print(rand_ind)
 
-        now = time.time()
+            now = time.time()
 
-        moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
+            moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
 
-        m.fit(target_ms=moments, stop=[{"epoch": 3000, "keep_fraction": .5},
-                                       {"epoch": 10000, "keep_fraction": .1},
-                                       {"epoch": 50000, "keep_fraction": .1}
-                                       ])
+            m.fit(target_ms=moments, stop=[{"epoch": 3000, "keep_fraction": .5},
+                                           {"epoch": 10000, "keep_fraction": .1},
+                                           {"epoch": 50000, "keep_fraction": .1}
+                                           ])
 
-        a, T = m.get_best_after_fit()
-
-
-        moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
-        print(moment_table)
-
-        curr_ind = df_res.shape[0]
-
-        end = time.time()
-        runtime = end-now
-        print('runtime is: ', runtime)
-
-        df_res.loc[curr_ind,'run_time'] = runtime
-        df_res.loc[curr_ind, 'k'] = k
-        df_res.loc[curr_ind, 'type_ph'] = type_ph
-        df_res.loc[curr_ind, 'type_test_ph'] = dataset
-        df_res.loc[curr_ind, 'num_rep'] = num_rep
-        df_res.loc[curr_ind, 'num_epochs'] = num_epochs
-        df_res.loc[curr_ind, 'num_moms'] = num_moms
-        df_res.loc[curr_ind, 'init_drop'] = init_drop
-        df_res.loc[curr_ind, 'lr_gamma'] = lr_gamma
-        df_res.loc[curr_ind, 'rand_ind'] = rand_ind
-
-        for mom in range(1, num_moms + 1):
-            df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
-
-        for mom in range(1, num_moms + 1):
-            df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
-
-        for mom in range(1, num_moms + 1):
-            df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
-
-        file_name  = 'model_num_' + str(rand_model) +  '_df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +  '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'   +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
-
-        dump_path = '/scratch/eliransc/deep_moment_results'
-        pkl.dump( df_res, open(os.path.join(dump_path,  file_name), 'wb'))
+            a, T = m.get_best_after_fit()
 
 
-        # except:
-        #     print('bad iteration', rand_ind)
+            moment_table = moment_analytics(moments, compute_moments(a.to('cpu'), T.to('cpu'), k, len(moments)))
+            print(moment_table)
+
+            curr_ind = df_res.shape[0]
+
+            end = time.time()
+            runtime = end-now
+            print('runtime is: ', runtime)
+
+            df_res.loc[curr_ind,'run_time'] = runtime
+            df_res.loc[curr_ind, 'k'] = k
+            df_res.loc[curr_ind, 'type_ph'] = type_ph
+            df_res.loc[curr_ind, 'type_test_ph'] = dataset
+            df_res.loc[curr_ind, 'num_rep'] = num_rep
+            df_res.loc[curr_ind, 'num_epochs'] = num_epochs
+            df_res.loc[curr_ind, 'num_moms'] = num_moms
+            df_res.loc[curr_ind, 'init_drop'] = init_drop
+            df_res.loc[curr_ind, 'lr_gamma'] = lr_gamma
+            df_res.loc[curr_ind, 'rand_ind'] = rand_ind
+
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'computed_' + str(mom)] = moment_table.loc[mom - 1, 'computed']
+
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'target_' + str(mom)] = moment_table.loc[mom - 1, 'target']
+
+            for mom in range(1, num_moms + 1):
+                df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
+
+            file_name  = 'model_num_' + str(rand_model) +  '_df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +  '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'   +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
+
+            dump_path = '/scratch/eliransc/deep_moment_results'
+            pkl.dump(df_res, open(os.path.join(dump_path,  file_name), 'wb'))
+
+
+        except:
+            print('bad iteration', rand_ind)
 
 
 
