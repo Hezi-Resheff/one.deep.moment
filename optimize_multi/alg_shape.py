@@ -1,5 +1,5 @@
 import torch
-from alg import GeneralPHMatcher
+from alg import GeneralPHMatcher, CoxianPHMatcher, HyperErlangMatcher
 
 THE_GLOBAL_TRADEOFF_PARAMETER = .1
 
@@ -46,17 +46,61 @@ class GeneralPHPercentileMatcher(GeneralPHMatcher):
             cdf_at_x = self.phase_type_cdf(a, T, x)
             loss2 += torch.sum((cdf_at_x - p) ** 2)
 
+            extended_loss_info["per_replica"] += THE_GLOBAL_TRADEOFF_PARAMETER * (cdf_at_x - p) ** 2
+
+        return loss1 + THE_GLOBAL_TRADEOFF_PARAMETER * loss2, extended_loss_info
+
+
+class CoxianPHPercentileMatcher(CoxianPHMatcher):
+    def _loss(self, target_ms):
+        """
+        target_ms is a dictionary with keys "moments" and "cdf"
+        """
+        target_moments = target_ms["moments"]
+        loss1, extended_loss_info = super()._loss(target_moments)
+
+        a, T = self._make_phs_from_params()
+        loss2 = 0
+
+        for x, p in target_ms["cdf"]:
+            cdf_at_x = GeneralPHPercentileMatcher.phase_type_cdf(a, T, x)
+            loss2 += torch.sum((cdf_at_x - p) ** 2)
+
+            extended_loss_info["per_replica"] += THE_GLOBAL_TRADEOFF_PARAMETER * (cdf_at_x - p) ** 2
+
+        return loss1 + THE_GLOBAL_TRADEOFF_PARAMETER * loss2, extended_loss_info
+
+
+class HyperErlangPHPercentileMatcher(HyperErlangMatcher):
+    def _loss(self, target_ms):
+        """
+        target_ms is a dictionary with keys "moments" and "cdf"
+        """
+        target_moments = target_ms["moments"]
+        loss1, extended_loss_info = super()._loss(target_moments)
+
+        a, T = self._make_phs_from_params()
+        loss2 = 0
+
+        for x, p in target_ms["cdf"]:
+            cdf_at_x = GeneralPHPercentileMatcher.phase_type_cdf(a, T, x)
+            loss2 += torch.sum((cdf_at_x - p) ** 2)
+
+            extended_loss_info["per_replica"] += THE_GLOBAL_TRADEOFF_PARAMETER * (cdf_at_x - p) ** 2
+
         return loss1 + THE_GLOBAL_TRADEOFF_PARAMETER * loss2, extended_loss_info
 
 
 if __name__ == "__main__":
-    m = GeneralPHPercentileMatcher(ph_size=10, n_replica=250, num_epochs=50000)
+    # m = GeneralPHPercentileMatcher(ph_size=10, n_replica=5, num_epochs=1000)
+    # m = CoxianPHPercentileMatcher(ph_size=10, n_replica=5, num_epochs=1000)
+    m = HyperErlangPHPercentileMatcher(block_sizes=[5, 5], n_replica=5, num_epochs=10000)
 
     moms = torch.tensor([1.00000000e+00, 1.79383841e+00, 4.46889373e+00, 1.40808072e+01, 5.34659152e+01])
 
-    cdf = {0.3253253253253253: 0.25089067220687866,
-           0.7657657657657657: 0.5022503137588501,
-           1.4314314314314314: 0.7513095736503601}
+    cdf = {0.3253: 0.25,
+           0.7657: 0.50,
+           1.4314: 0.75}
 
     m.fit({"moments": moms, "cdf": list(cdf.items())})
 
@@ -67,11 +111,12 @@ if __name__ == "__main__":
 
     print("=" * 10 + " CDF " + "=" * 10)
     for x in cdf.keys():
-        print(m.phase_type_cdf(a, T, x))
+        print(GeneralPHPercentileMatcher.phase_type_cdf(a, T, x))
 
     print("=" * 10 + " PH " + "=" * 10)
 
     a, T = m.get_best_after_fit()
     print(a)
     print(T)
+
 
