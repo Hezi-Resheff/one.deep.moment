@@ -228,10 +228,10 @@ def get_settings():
 
     if type_ph == 'general':
 
-        k = random.choice([20,50, 100])
+        k = random.choice([100])
 
     elif type_ph == 'cox':
-        k = random.choice([20, 50, 200])
+        k = random.choice([200])
 
     num_rep  = random.choice([2000, 10000, 20000])
 

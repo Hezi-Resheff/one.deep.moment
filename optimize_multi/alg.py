@@ -82,6 +82,8 @@ class MomentMatcherBase(object):
 
     def _loss(self, target_ms):
         a, T = self._make_phs_from_params()
+        a = a.to(self.device)
+        T = T.to(self.device)
         ms = self._compute_moments(a, T, n_moments=len(target_ms), device=self.device)
         weighted_error = (ms - target_ms.to(self.device)) / target_ms.to(self.device)
         per_replica_loss = torch.mean(weighted_error ** 2, dim=1)
@@ -212,7 +214,7 @@ class CoxianPHMatcher(MomentMatcherBase):
 
 
 class HyperErlangMatcher(MomentMatcherBase):
-    def __init__(self, block_sizes, n_replica=10, lr=1e-4, num_epochs=1000, lr_gamma=.9, sort_init=True, normalize_m1=True):
+    def __init__(self, block_sizes, n_replica=10, lr=1e-2, num_epochs=1000, lr_gamma=.9, sort_init=True, normalize_m1=True):
         super().__init__(sum(block_sizes), n_replica, lr, num_epochs, lr_gamma)
         self.block_sizes = block_sizes
         self.n_blocks = len(block_sizes) 
@@ -238,6 +240,8 @@ class HyperErlangMatcher(MomentMatcherBase):
         if self.normalize_m1:
             self.params = alpha, lambdas, ps
             a, T = self._make_phs_from_params()
+            a = a.to(self.device)
+            T = T.to(self.device)
             m1 = self._compute_moments(a, T, n_moments=1, device=device)
             lambdas.data = lambdas.data * m1 ** 0.5
 
