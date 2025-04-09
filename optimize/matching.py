@@ -8,7 +8,7 @@ import pickle as pkl
 import os
 import sys
 # Stop optimization when the loss hits this value
-MIN_LOSS_EPSILON = 1e-9
+MIN_LOSS_EPSILON = 1e-8
 # sys.path.append(os.path.abspath(".."))
 # from utils_sample_ph import *
 
@@ -468,13 +468,13 @@ if __name__ == "__main__":
 
 
     # a, T, momenets = get_feasible_moments(original_size=20, n=5)
-    moments = torch.tensor([1.00000000e+00, 1.76841773e+00, 4.03513940e+00, 1.14200072e+01])
+    moments = torch.tensor([1.00000000e+00, 1.47061443e+00])
 
     print(moments)
     n_moments = len(moments)
     ls = np.array([10,10,10,10,10,10,10])
-    k = 68 #ls.sum()
-    num_epochs = 280000
+    k = 7 #ls.sum()
+    num_epochs = 150000
     ws = moments ** (-1)
 
     # matcher = MultiErlangMomentMatcher(ms=moments, ls=ls)
@@ -485,4 +485,4 @@ if __name__ == "__main__":
 
     moment_table = moment_analytics(moments, compute_moments(a, T, k, n_moments))
     print(moment_table)
-    pkl.dump((a,T), open('a_T_ser_4.pkl', 'wb'))
+    pkl.dump((a,T), open('a_T_arrive_2.pkl', 'wb'))

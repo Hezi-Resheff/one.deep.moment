@@ -228,12 +228,12 @@ def get_settings():
 
     if type_ph == 'general':
 
-        k = random.choice([100])
+        k = random.choice([70])
 
     elif type_ph == 'cox':
-        k = random.choice([200])
+        k = random.choice([130])
 
-    num_rep  = random.choice([2000, 10000])
+    num_rep  = random.choice([2000])
 
     return (init_drop, num_moms, dataset, lr_gamma, type_ph, k, num_rep)
 
