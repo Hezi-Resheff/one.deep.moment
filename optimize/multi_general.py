@@ -233,7 +233,7 @@ def get_settings():
     elif type_ph == 'cox':
         k = random.choice([130])
 
-    num_rep  = random.choice([2000])
+    num_rep  = random.choice([20000])
 
     return (init_drop, num_moms, dataset, lr_gamma, type_ph, k, num_rep)
 
