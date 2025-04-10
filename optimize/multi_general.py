@@ -218,7 +218,7 @@ def get_settings():
 
     init_drop = random.choice(init_drop_list)
 
-    num_moms = random.choice([5, 10,20])
+    num_moms = random.choice([20])
 
     dataset = random.choice(['df_cox.csv', 'df_general.csv', 'df_hyper.csv'])
 
@@ -233,7 +233,7 @@ def get_settings():
     elif type_ph == 'cox':
         k = random.choice([140])
 
-    num_rep  = random.choice([10000])
+    num_rep  = random.choice([2000, 10000])
 
     return (init_drop, num_moms, dataset, lr_gamma, type_ph, k, num_rep)
 
@@ -295,9 +295,9 @@ if __name__ == "__main__":
 
             moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
 
-            m.fit(target_ms=moments, stop=[{"epoch": 3000, "keep_fraction": .5},
+            m.fit(target_ms=moments, stop=[{"epoch": 3000, "keep_fraction": .3},
                                            {"epoch": 10000, "keep_fraction": .1},
-                                           {"epoch": 50000, "keep_fraction": .1}
+                                           {"epoch": 30000, "keep_fraction": .1}
                                            ])
 
             a, T = m.get_best_after_fit()
