@@ -30,7 +30,7 @@ class MomentMatcherBase(object):
         # train loop
         for epoch in range(self.n_epochs):
             optimizer.zero_grad()
-            loss, extended_loss_info = self._loss(target_ms)
+            loss, extended_loss_info = self._loss(target_ms.to(self.device))
             loss.backward()
             optimizer.step()
 
@@ -84,6 +84,8 @@ class MomentMatcherBase(object):
 
     def _loss(self, target_ms):
         a, T = self._make_phs_from_params()
+        a = a.to(self.device)
+        T = T.to(self.device)
         ms = self._compute_moments(a, T, n_moments=len(target_ms), device=self.device)
         weighted_error = (ms - target_ms.to(self.device)) / target_ms.to(self.device)
         per_replica_loss = torch.mean(weighted_error ** 2, dim=1)
@@ -170,6 +172,64 @@ class GeneralPHMatcher(MomentMatcherBase):
         return a, T
 
 
+class HyperErlangMatcher(MomentMatcherBase):
+    def __init__(self, block_sizes, n_replica=10, lr=1e-2, num_epochs=1000, lr_gamma=.9, sort_init=True,
+                 normalize_m1=True):
+        super().__init__(sum(block_sizes), n_replica, lr, num_epochs, lr_gamma)
+        self.block_sizes = block_sizes
+        self.n_blocks = len(block_sizes)
+        self.sort_init = sort_init
+        self.normalize_m1 = normalize_m1
+
+    def _init(self):
+        device = self.device
+
+        lam = torch.rand(self.n, self.n_blocks).to(self.device)
+
+        if self.sort_init:
+            lam, _ = lam.sort(dim=1)
+
+        lambdas = torch.empty(self.n, self.n_blocks, requires_grad=False).to(self.device)
+        lambdas.data = lam
+
+        ps = torch.randn(self.n, self.n_blocks, requires_grad=False).to(self.device)
+
+        ones = torch.ones(self.n_blocks).to(self.device)
+        alpha = torch.distributions.Dirichlet(ones).sample((self.n, 1)).squeeze(1).to(self.device)
+
+        if self.normalize_m1:
+            self.params = alpha, lambdas, ps
+            a, T = self._make_phs_from_params()
+            a = a.to(self.device)
+            T = T.to(self.device)
+            m1 = self._compute_moments(a, T, n_moments=1, device=device)
+            lambdas.data = lambdas.data * m1 ** 0.5
+
+        lambdas.requires_grad_(True)
+        ps.requires_grad_(True)
+        alpha.requires_grad_(True)
+        self.params = alpha, lambdas, ps
+
+    def _make_phs_from_params(self):
+        alpha, lambdas, ps = self.params
+
+        # Make a by softmax and adding in zeros
+        a = torch.nn.functional.softmax(alpha, dim=1)
+        aa = torch.zeros(self.n, self.k)
+        cuma = torch.cumsum(torch.tensor(self.block_sizes), dim=0)
+
+        for i in range(self.n_blocks):
+            aa[:, cuma[i] - self.block_sizes[i]] = a[:, i]
+
+        # lambda and ps are repeated according to block sizes
+        ls = torch.cat([lambdas[:, [i]].repeat(1, bs) for i, bs in enumerate(self.block_sizes)], dim=1) ** 2
+        ps = torch.cat([ps[:, [i]].repeat(1, bs) for i, bs in enumerate(self.block_sizes)], dim=1)
+        ps = torch.sigmoid(ps)
+
+        T = torch.diag_embed(-ls) + torch.diag_embed(ps[:, :-1] * ls[:, :-1], offset=1)
+
+        return aa, T
+
 class CoxianPHMatcher(MomentMatcherBase):
     def __init__(self, ph_size, n_replica=10, lr=1e-4, num_epochs=1000, lr_gamma=.9, normalize_m1=True, sort_init=True):
         super().__init__(ph_size, n_replica, lr, num_epochs, lr_gamma)
@@ -218,19 +278,22 @@ def get_settings():
 
     init_drop = random.choice(init_drop_list)
 
-    num_moms = random.choice([20])
+    num_moms = random.choice([5,10, 20])
 
-    dataset = random.choice(['df_cox.csv', 'df_general.csv', 'df_hyper.csv'])
+    dataset = random.choice(['df_cox.csv',  'df_hyper.csv']) # 'df_general.csv',
 
     lr_gamma = random.choice([0.9,0.95,0.99])
 
-    type_ph = random.choice(['cox', 'general'])
+    type_ph = random.choice(['hyper' ]) #  'cox', 'general'
 
     if type_ph == 'general':
 
         k = random.choice([80])
 
     elif type_ph == 'cox':
+        k = random.choice([140])
+
+    elif type_ph == 'hyper':
         k = random.choice([140])
 
     num_rep  = random.choice([2000, 10000])
@@ -289,6 +352,12 @@ if __name__ == "__main__":
 
                 m = CoxianPHMatcher(ph_size=k, num_epochs=num_epochs, lr=5e-3, lr_gamma=lr_gamma, n_replica=num_rep)
 
+            elif type_ph == 'hyper':
+
+                k = np.array([10, 10,15,20,8,6,7,6]).sum()
+
+                m = HyperErlangMatcher(block_sizes=[10, 10,15,20,8,6,7,6], n_replica=num_rep, num_epochs=num_epochs, lr=5e-3, lr_gamma=lr_gamma)
+
             print(rand_ind)
 
             now = time.time()
@@ -334,7 +403,7 @@ if __name__ == "__main__":
 
             file_name  = 'model_num_' + str(rand_model) +  '_df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +  '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'   +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
             try:
-                dump_path = '/scratch/eliransc/deep_moment_results'
+                dump_path = '/scratch/eliransc/deep_moment_results1'
                 pkl.dump(df_res, open(os.path.join(dump_path,  file_name), 'wb'))
             except:
                 pkl.dump(df_res, open(file_name, 'wb'))
