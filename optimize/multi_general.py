@@ -284,7 +284,7 @@ def get_settings():
 
     lr_gamma = random.choice([0.9])
 
-    type_ph = random.choice(['hyper', 'cox' ]) #  'cox', 'general'
+    type_ph = random.choice(['hyper']) #  'cox', 'general'
 
     if type_ph == 'general':
 
@@ -294,7 +294,7 @@ def get_settings():
         k = random.choice([20, 50, 140])
 
     elif type_ph == 'hyper':
-        k = random.choice([20, 50, 140])
+        k = random.choice([20, 50, 100])
 
     num_rep  = random.choice([ 10000])
 
@@ -354,9 +354,18 @@ if __name__ == "__main__":
 
             elif type_ph == 'hyper':
 
-                k = np.array([10, 10,15,20,8,6,7,6]).sum()
+                # k = np.array([10, 10,15,20,8,6,7,6]).sum()
 
-                m = HyperErlangMatcher(block_sizes=[10, 10,15,20,8,6,7,6], n_replica=num_rep, num_epochs=num_epochs, lr=5e-3, lr_gamma=lr_gamma)
+                if  k == 20:
+                    block_sizes = [4,6,3,7]
+                elif  k == 50:
+                    block_sizes = [4, 6, 3, 7, 10, 12, 8]
+                else:
+                    block_sizes = [4, 6, 3, 7, 10, 12, 8, 10, 20, 20,10]
+
+
+
+                m = HyperErlangMatcher(block_sizes=block_sizes, n_replica=num_rep, num_epochs=num_epochs, lr=5e-3, lr_gamma=lr_gamma)
 
             print(rand_ind)
 
@@ -366,7 +375,7 @@ if __name__ == "__main__":
 
             m.fit(target_ms=moments, stop=[{"epoch": 3000, "keep_fraction": .3},
                                            {"epoch": 10000, "keep_fraction": .1},
-                                           {"epoch": 30000, "keep_fraction": .1}
+                                           {"epoch": 15000, "keep_fraction": .1}
                                            ])
 
             a, T = m.get_best_after_fit()
