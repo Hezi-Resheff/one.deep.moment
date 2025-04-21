@@ -278,7 +278,7 @@ def get_settings():
 
     init_drop = random.choice(init_drop_list)
 
-    num_moms = random.choice([5,10,20])
+    num_moms = random.choice([20])
 
     dataset = random.choice(['df_cox.csv',  'df_hyper.csv']) # 'df_general.csv',
 
@@ -294,7 +294,7 @@ def get_settings():
         k = random.choice([20, 50, 140])
 
     elif type_ph == 'hyper':
-        k = random.choice([20, 50, 100])
+        k = random.choice([100])
 
     num_rep  = random.choice([ 10000])
 
@@ -322,6 +322,10 @@ if __name__ == "__main__":
 
     init_drop, num_moms, dataset, lr_gamma, type_ph, k, num_rep  = get_settings()
     print(init_drop, num_moms, dataset, lr_gamma, type_ph, k, num_rep)
+
+    if (k > 50) & (num_rep == 10000):
+        num_rep = 5000
+        print('num_rep', num_rep)
 
 
     df_dat =  pd.read_csv(os.path.abspath("../optimize_multi/" +dataset))  #pkl.load(open(os.path.abspath("../optimize/" +dataset), 'rb'))
@@ -365,6 +369,7 @@ if __name__ == "__main__":
 
 
 
+
                 m = HyperErlangMatcher(block_sizes=block_sizes, n_replica=num_rep, num_epochs=num_epochs, lr=5e-3, lr_gamma=lr_gamma)
 
             print(rand_ind)
@@ -373,7 +378,7 @@ if __name__ == "__main__":
 
             moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
 
-            m.fit(target_ms=moments, stop=[{"epoch": 2000, "keep_fraction": .3},
+            m.fit(target_ms=moments, stop=[{"epoch": 500, "keep_fraction": .2},
                                            {"epoch": 5000, "keep_fraction": .1},
                                            {"epoch": 15000, "keep_fraction": .1}
                                            ])
