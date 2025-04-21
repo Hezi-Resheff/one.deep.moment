@@ -278,21 +278,20 @@ def get_settings():
 
     init_drop = random.choice(init_drop_list)
 
-    num_moms = random.choice([5,10,
-                              20])
+    num_moms = random.choice([5,10,20])
 
     dataset = random.choice(['df_cox.csv',  'df_hyper.csv']) # 'df_general.csv',
 
     lr_gamma = random.choice([0.9])
 
-    type_ph = random.choice(['hyper' ]) #  'cox', 'general'
+    type_ph = random.choice(['hyper', 'cox' ]) #  'cox', 'general'
 
     if type_ph == 'general':
 
         k = random.choice([80])
 
     elif type_ph == 'cox':
-        k = random.choice([140])
+        k = random.choice([20, 50, 140])
 
     elif type_ph == 'hyper':
         k = random.choice([20, 50, 140])
