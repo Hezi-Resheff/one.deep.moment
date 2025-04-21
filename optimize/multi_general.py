@@ -274,15 +274,16 @@ class CoxianPHMatcher(MomentMatcherBase):
 
 def get_settings():
 
-    init_drop_list = [0.1, 0.5, 0.9, 'uniform']
+    init_drop_list = [0.9]
 
     init_drop = random.choice(init_drop_list)
 
-    num_moms = random.choice([5,10, 20])
+    num_moms = random.choice([5,10,
+                              20])
 
     dataset = random.choice(['df_cox.csv',  'df_hyper.csv']) # 'df_general.csv',
 
-    lr_gamma = random.choice([0.9,0.95,0.99])
+    lr_gamma = random.choice([0.9])
 
     type_ph = random.choice(['hyper' ]) #  'cox', 'general'
 
