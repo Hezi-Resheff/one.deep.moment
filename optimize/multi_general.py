@@ -373,8 +373,8 @@ if __name__ == "__main__":
 
             moments = torch.tensor(df_dat.loc[rand_ind, moms_cols])
 
-            m.fit(target_ms=moments, stop=[{"epoch": 3000, "keep_fraction": .3},
-                                           {"epoch": 10000, "keep_fraction": .1},
+            m.fit(target_ms=moments, stop=[{"epoch": 2000, "keep_fraction": .3},
+                                           {"epoch": 5000, "keep_fraction": .1},
                                            {"epoch": 15000, "keep_fraction": .1}
                                            ])
 
