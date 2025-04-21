@@ -295,7 +295,7 @@ def get_settings():
         k = random.choice([140])
 
     elif type_ph == 'hyper':
-        k = random.choice([140])
+        k = random.choice([20, 50, 140])
 
     num_rep  = random.choice([ 10000])
 
