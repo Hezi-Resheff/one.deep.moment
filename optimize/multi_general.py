@@ -274,8 +274,10 @@ class CoxianPHMatcher(MomentMatcherBase):
 
 def get_settings():
 
-
-    df_run = pd.read_csv(r'C:\Users\Eshel\workspace\one.deep.moment\optimize_multi\run_lest.csv')
+    try:
+        df_run = pd.read_csv(r'C:\Users\Eshel\workspace\one.deep.moment\optimize_multi\run_lest.csv')
+    except:
+        df_run = pd.read_csv(os.path.abspath("../run_lest.csv" ))
 
     ind_selected = np.random.randint(df_run.shape[0])
 
@@ -425,7 +427,7 @@ if __name__ == "__main__":
             for mom in range(1, num_moms + 1):
                 df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
 
-            file_name  = 'model_num_' + str(rand_model) +  '_df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +  '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'   +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
+            file_name  = '222model_num_' + str(rand_model) +  '_df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +  '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'   +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
             try:
                 dump_path = '/scratch/eliransc/deep_moment_results1'
                 pkl.dump(df_res, open(os.path.join(dump_path,  file_name), 'wb'))
