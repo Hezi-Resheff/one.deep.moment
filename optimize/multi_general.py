@@ -358,7 +358,7 @@ if __name__ == "__main__":
 
         rand_ind = np.random.randint(df_dat.shape[0])
 
-        if True:
+        try:
 
             if type_ph == 'general':
 
@@ -436,8 +436,8 @@ if __name__ == "__main__":
                 pkl.dump(df_res, open(file_name, 'wb'))
 
 
-        # except:
-        #     print('bad iteration', rand_ind)
+        except:
+            print('bad iteration', rand_ind)
 
 
 
