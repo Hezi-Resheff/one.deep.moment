@@ -379,6 +379,7 @@ if __name__ == "__main__":
                 else:
                     block_sizes = [4, 6, 3, 7, 10, 12, 8, 10, 20, 20,10]
 
+                k = block_sizes.sum()
 
 
 
@@ -429,7 +430,7 @@ if __name__ == "__main__":
 
             file_name  = '222model_num_' + str(rand_model) +  '_df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +  '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'   +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
             try:
-                dump_path = '/scratch/eliransc/deep_moment_results1'
+                dump_path = '/scratch/eliransc'
                 pkl.dump(df_res, open(os.path.join(dump_path,  file_name), 'wb'))
             except:
                 pkl.dump(df_res, open(file_name, 'wb'))
