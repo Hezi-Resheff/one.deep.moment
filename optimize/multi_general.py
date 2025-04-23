@@ -7,7 +7,7 @@ import time
 import random
 
 
-MIN_LOSS_EPSILON = 1e-9
+MIN_LOSS_EPSILON = 1e-8
 
 class MomentMatcherBase(object):
     def __init__(self, ph_size, n_replica=10, lr=1e-4, num_epochs=1000, lr_gamma=.9):
@@ -290,17 +290,17 @@ def get_settings():
 
     init_drop = random.choice(init_drop_list)
 
-    num_moms = random.choice([5])
+    num_moms = random.choice([10])
 
     dataset = random.choice(['df_cox.csv',  'df_hyper.csv']) # 'df_general.csv',
 
     lr_gamma = random.choice([0.9])
 
-    type_ph = random.choice(['hyper']) #  'cox', 'general'
+    type_ph = random.choice(['hyper', 'cox', 'general']) #  'cox', 'general'
 
     if type_ph == 'general':
 
-        k = random.choice([80])
+        k = random.choice([20,50,100])
 
     elif type_ph == 'cox':
         k = random.choice([20, 50, 140])
@@ -352,7 +352,7 @@ if __name__ == "__main__":
 
     rand_model = np.random.randint(1000000)
 
-    num_epochs  = 80000
+    num_epochs  = 75000
     for rand_ind in range(300):
 
 
@@ -428,12 +428,12 @@ if __name__ == "__main__":
             for mom in range(1, num_moms + 1):
                 df_res.loc[curr_ind, 'delta-relative_' + str(mom)] = moment_table.loc[mom - 1, 'delta-relative']
 
-            file_name  = '222model_num_' + str(rand_model) +  '_df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +  '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'   +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
+            file_name  = '333model_num_' + str(rand_model) +  '_df_res_type_ph_'+type_ph + '_init_drop_' + str(init_drop) +  '_ph_size_' + str(k) +  '_lr_gamma_' + str(lr_gamma)  +  '_nummoms_'   +str(num_moms)+'_testset_' + dataset[:-4] + '_size_'+str(k) + '_numrepli_'+str(num_rep) + '_num_epochs_'+str(num_epochs)+'.pkl'
             try:
                 dump_path = '/scratch/eliransc/deep_moment_results1'
                 pkl.dump(df_res, open(os.path.join(dump_path,  file_name), 'wb'))
             except:
-                pkl.dump(df_res, open(file_name, 'wb'))
+                pkl.dump(df_res, open(os.path.join(r'./results_for_paper',file_name), 'wb'))
 
 
         # except:
