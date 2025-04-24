@@ -274,39 +274,43 @@ class CoxianPHMatcher(MomentMatcherBase):
 
 def get_settings():
 
-    # try:
-    #     df_run = pd.read_csv(r'C:\Users\Eshel\workspace\one.deep.moment\optimize_multi\run_lest.csv')
-    # except:
-    #     df_run = pd.read_csv(os.path.abspath("../run_lest.csv" ))
-    #
-    # ind_selected = np.random.randint(df_run.shape[0])
-    #
-    # num_moms = int(df_run.loc[ind_selected, 'num_moms'].item())
-    # type_ph = df_run.loc[ind_selected, 'model']
-    # dataset = df_run.loc[ind_selected, 'dataset']
-    # k = int(df_run.loc[ind_selected, 'PH_size_fit'].item())
+    try:
+        df_run = pd.read_csv(r'C:\Users\Eshel\workspace\one.deep.moment\optimize_multi\run_lest.csv')
+    except:
+        df_run = pd.read_csv(os.path.abspath("../run_lest.csv" ))
+
+    ind_selected = np.random.randint(df_run.shape[0])
+
+    num_moms = int(df_run.loc[ind_selected, 'num_moms'].item())
+    type_ph = df_run.loc[ind_selected, 'model']
+    dataset = df_run.loc[ind_selected, 'dataset']
+    k = int(df_run.loc[ind_selected, 'PH_size_fit'].item())
 
     init_drop_list = [0.9]
 
     init_drop = random.choice(init_drop_list)
 
-    num_moms = random.choice([10])
+    # num_moms = random.choice([10])
 
-    dataset = random.choice(['df_cox.csv',  'df_hyper.csv']) # 'df_general.csv',
+    # dataset = random.choice(['df_cox.csv',  'df_hyper.csv']) # 'df_general.csv',
 
     lr_gamma = random.choice([0.9])
 
-    type_ph = random.choice(['hyper', 'cox', 'general']) #  'cox', 'general'
+    # type_ph = random.choice(['hyper', 'cox', 'general']) #  'cox', 'general'
 
-    if type_ph == 'general':
+    # if type_ph == 'general':
+    #
+    #     k = random.choice([20,50,100])
+    #
+    # elif type_ph == 'cox':
+    #     k = random.choice([20, 50, 140])
+    #
+    # elif type_ph == 'hyper':
+    #     k = random.choice([20,50, 100])
 
-        k = random.choice([20,50,100])
-
-    elif type_ph == 'cox':
-        k = random.choice([20, 50, 140])
-
-    elif type_ph == 'hyper':
-        k = random.choice([20,50, 100])
+    if type_ph =='cox':
+        if k > 50:
+            k = 120
 
     num_rep  = random.choice([10000])
 
