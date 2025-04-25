@@ -277,7 +277,7 @@ def get_settings():
     try:
         df_run = pd.read_csv(r'C:\Users\Eshel\workspace\one.deep.moment\optimize_multi\run_lasting.csv')
     except:
-        df_run = pd.read_csv(os.path.abspath("../run_lasting.csv" ))
+        df_run = pd.read_csv(os.path.abspath("./run_lasting.csv" ))
 
     ind_selected = np.random.randint(df_run.shape[0])
 
