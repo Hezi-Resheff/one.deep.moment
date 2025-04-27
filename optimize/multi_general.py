@@ -290,7 +290,7 @@ def get_settings():
 
     init_drop = random.choice(init_drop_list)
 
-    num_moms = random.choice([20])
+    # num_moms = random.choice([20])
 
     # dataset = random.choice(['df_cox.csv',  'df_hyper.csv']) # 'df_general.csv',
 
