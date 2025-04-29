@@ -275,7 +275,7 @@ class CoxianPHMatcher(MomentMatcherBase):
 def get_settings():
 
     try:
-        df_run = pd.read_csv(r'C:\Users\Eshel\workspace\one.deep.moment\optimize_multi\run_lasting1.csv')
+        df_run = pd.read_csv(r'C:\Users\Eshel\workspace\one.deep.moment\optimize_multi\run_lasting2.csv')
     except:
         df_run = pd.read_csv(os.path.abspath("./run_lasting2.csv" ))
 
@@ -310,7 +310,7 @@ def get_settings():
 
     if type_ph =='cox':
         if k > 50:
-            k = 120
+            k = 75
 
     num_rep  = random.choice([10000])
 
