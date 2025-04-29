@@ -279,7 +279,7 @@ def get_settings():
     except:
         df_run = pd.read_csv(os.path.abspath("./run_lasting2.csv" ))
 
-    ind_selected = 5 # np.random.randint(df_run.shape[0])
+    ind_selected =  np.random.randint(df_run.shape[0])
 
     num_moms = int(df_run.loc[ind_selected, 'num_moms'].item())
     type_ph = df_run.loc[ind_selected, 'model']
