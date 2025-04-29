@@ -279,7 +279,7 @@ def get_settings():
     except:
         df_run = pd.read_csv(os.path.abspath("./run_lasting2.csv" ))
 
-    ind_selected = np.random.randint(df_run.shape[0])
+    ind_selected = 5 # np.random.randint(df_run.shape[0])
 
     num_moms = int(df_run.loc[ind_selected, 'num_moms'].item())
     type_ph = df_run.loc[ind_selected, 'model']
@@ -362,7 +362,7 @@ if __name__ == "__main__":
 
         rand_ind = np.random.randint(df_dat.shape[0])
 
-        if True:
+        try:
 
             if type_ph == 'general':
 
@@ -381,7 +381,7 @@ if __name__ == "__main__":
                 elif  k == 50:
                     block_sizes = [4, 6, 3, 7, 10, 12, 8]
                 else:
-                    block_sizes = [4, 6, 3, 7, 10, 12, 8, 10, 20, 20,10]
+                    block_sizes = [4, 6, 3, 7, 10, 12, 8, 10, 20,10]
 
                 k = np.array(block_sizes).sum()
 
@@ -440,8 +440,8 @@ if __name__ == "__main__":
                 pkl.dump(df_res, open(os.path.join(r'./results_for_paper',file_name), 'wb'))
 
 
-        # except:
-        #     print('bad iteration', rand_ind)
+        except:
+            print('bad iteration', rand_ind)
 
 
 
